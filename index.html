@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -5,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Portal Digital RT 04</title>
 
-    <!-- Meta Tag PWA Standalone Layar Penuh (Mobile-First Poco F7) -->
+    <!-- Meta Tag PWA Standalone Layar Penuh (Mobile-First) -->
     <meta name="theme-color" content="#065f46">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -49,20 +50,20 @@
 
     <style>
         /* =====================================================================
-           TATA LETAK PWA MOBILE-FIRST LAYAR PENUH (100dvh LOCKED VIEWPORT)
+           TATA LETAK PWA MOBILE-FIRST PRESISI (ANTI-POTONG NAVIGASI HP)
            ===================================================================== */
         html, body {
             height: 100%;
-            overflow: hidden;
             margin: 0;
             padding: 0;
+            overflow: hidden;
             background-color: #cbd5e1;
             font-family: 'Plus Jakarta Sans', sans-serif;
             -webkit-tap-highlight-color: transparent;
             overscroll-behavior-y: none;
         }
 
-        #app-shell {
+        #root {
             height: 100dvh;
             max-width: 480px;
             margin: 0 auto;
@@ -74,22 +75,18 @@
         }
 
         #app-header {
-            flex-shrink: 0;
             background: linear-gradient(135deg, #065f46 0%, #047857 100%);
             padding-top: max(12px, env(safe-area-inset-top));
         }
 
         #app-main {
-            flex: 1;
-            overflow-y: auto;
-            padding-bottom: 24px;
             -webkit-overflow-scrolling: touch;
             overscroll-behavior-y: contain;
         }
 
         #app-nav {
-            flex-shrink: 0;
-            padding-bottom: max(8px, env(safe-area-inset-bottom));
+            padding-top: 10px;
+            padding-bottom: max(18px, env(safe-area-inset-bottom));
         }
 
         .no-scrollbar::-webkit-scrollbar {
@@ -114,7 +111,7 @@
                 size: A4 portrait;
                 margin: 18mm 20mm;
             }
-            html, body, #app-shell {
+            html, body, #root {
                 height: auto !important;
                 overflow: visible !important;
                 background: #ffffff !important;
@@ -149,15 +146,15 @@
 <body class="text-slate-800 antialiased selection:bg-emerald-200 selection:text-emerald-950">
 
     <!-- ===================================================================== -->
-    <!-- KONTENER UTAMA APLIKASI PWA (100dvh LOCKED VIEWPORT)                  -->
+    <!-- KONTENER UTAMA APLIKASI PWA (100dvh FLEX COLUMN)                      -->
     <!-- ===================================================================== -->
-    <div id="app-shell" class="shadow-2xl">
+    <div id="root" class="shadow-2xl">
 
         <!-- ================================================================= -->
-        <!-- 1. HEADER ATAS TETAP                                              -->
+        <!-- 1. HEADER ATAS RINGKAS (SHRINK-0, TANPA TOMBOL REFRESH MANUAL)    -->
         <!-- ================================================================= -->
-        <header id="app-header" class="text-white px-4 pb-3.5 rounded-b-3xl shadow-md z-20 no-print">
-            <div class="flex items-center justify-between gap-2">
+        <header id="app-header" class="shrink-0 text-white px-4 pb-3.5 rounded-b-3xl shadow-md z-20 no-print">
+            <div class="flex items-center justify-between gap-2.5">
                 <!-- Judul Aplikasi (Ketuk 5x berturut-turut untuk membuka PIN Admin) -->
                 <div onclick="handleSecretTitleTap()" class="flex items-center gap-2.5 min-w-0 cursor-pointer select-none active:opacity-85">
                     <div class="w-10 h-10 rounded-2xl bg-white/15 backdrop-blur-sm border border-white/25 flex items-center justify-center shrink-0 shadow-inner">
@@ -169,15 +166,10 @@
                     </div>
                 </div>
 
-                <!-- Indikator Live Cloud & Tombol Refresh -->
-                <div class="flex items-center gap-1.5 shrink-0">
-                    <div class="bg-white/15 backdrop-blur-sm border border-white/20 px-2.5 py-1 rounded-full flex items-center gap-1.5 text-[10px] font-bold">
-                        <span id="cloud-dot" class="w-2 h-2 rounded-full bg-amber-300 animate-pulse"></span>
-                        <span id="cloud-label">Memuat...</span>
-                    </div>
-                    <button onclick="manualRefreshCloud()" title="Segarkan Data Cloud" class="w-8 h-8 rounded-full bg-white/15 hover:bg-white/25 active:scale-90 border border-white/20 flex items-center justify-center transition-all">
-                        <i data-lucide="refresh-cw" id="cloud-refresh-icon" class="w-3.5 h-3.5 text-white"></i>
-                    </button>
+                <!-- Indikator Status Hijau Berdenyut Live Auto-Sync -->
+                <div class="bg-white/15 backdrop-blur-sm border border-white/20 px-2.5 py-1.5 rounded-full flex items-center gap-1.5 text-[10px] font-bold shrink-0">
+                    <span id="cloud-dot" class="w-2 h-2 rounded-full bg-emerald-300 animate-pulse"></span>
+                    <span id="cloud-label">Live Auto-Sync</span>
                 </div>
             </div>
 
@@ -201,9 +193,9 @@
         </header>
 
         <!-- ================================================================= -->
-        <!-- 2. AREA KONTEN TENGAH SCROLLABLE INDEPENDEN                       -->
+        <!-- 2. AREA KONTEN TENGAH SCROLLABLE (FLEX-1 OVERFLOW-Y-AUTO PB-8)    -->
         <!-- ================================================================= -->
-        <main id="app-main" class="px-4 pt-3.5 space-y-4 no-print">
+        <main id="app-main" class="flex-1 overflow-y-auto px-4 pt-3.5 pb-8 space-y-4 no-print">
 
             <!-- Banner Pasang Aplikasi PWA di HP -->
             <div id="pwa-install-banner" class="bg-gradient-to-r from-emerald-950 to-emerald-800 text-white rounded-2xl p-3 shadow-sm border border-emerald-700/70 flex items-center justify-between gap-2.5">
@@ -304,7 +296,7 @@
                     <div id="list-beranda-patrols" class="space-y-2"></div>
                 </div>
 
-                <!-- Kontak Pengurus RT (Pesan Pribadi ke Pengurus) -->
+                <!-- Kontak Pengurus RT -->
                 <div>
                     <div class="flex items-center gap-1.5 mb-2">
                         <i data-lucide="phone-call" class="w-4 h-4 text-emerald-700"></i>
@@ -879,30 +871,30 @@
         </main>
 
         <!-- ================================================================= -->
-        <!-- 3. BILAH NAVIGASI BAWAH RESPONSIF (4 TAB WARGA / 5 TAB ADMIN)     -->
+        <!-- 3. BILAH NAVIGASI BAWAH ANTI-POTONG (SHRINK-0 + SAFE-AREA-INSET)   -->
         <!-- ================================================================= -->
-        <nav id="app-nav" class="bg-white border-t border-slate-200/90 px-1.5 pt-1.5 shadow-[0_-4px_20px_rgba(0,0,0,0.04)] z-20 no-print">
+        <nav id="app-nav" class="shrink-0 bg-white border-t border-slate-200 px-2 shadow-[0_-4px_20px_rgba(0,0,0,0.04)] z-30 no-print">
             <div id="nav-grid" class="grid grid-cols-4 gap-1">
-                <button onclick="switchMainTab('beranda')" id="nav-beranda" class="flex flex-col items-center justify-center py-1.5 rounded-xl text-emerald-800 font-bold bg-emerald-50 transition-all">
-                    <i data-lucide="home" class="w-5 h-5 mb-0.5"></i>
-                    <span class="text-[10px]">Beranda</span>
+                <button onclick="switchMainTab('beranda')" id="nav-beranda" class="flex flex-col items-center justify-center py-2 px-1 rounded-xl text-emerald-800 font-bold bg-emerald-50 transition-all">
+                    <i data-lucide="home" class="w-5 h-5 mb-1 shrink-0"></i>
+                    <span class="text-[11px] leading-tight">Beranda</span>
                 </button>
-                <button onclick="switchMainTab('kas')" id="nav-kas" class="flex flex-col items-center justify-center py-1.5 rounded-xl text-slate-400 hover:text-slate-600 font-medium transition-all">
-                    <i data-lucide="wallet" class="w-5 h-5 mb-0.5"></i>
-                    <span class="text-[10px]">Kas RT</span>
+                <button onclick="switchMainTab('kas')" id="nav-kas" class="flex flex-col items-center justify-center py-2 px-1 rounded-xl text-slate-500 hover:text-slate-700 font-medium transition-all">
+                    <i data-lucide="wallet" class="w-5 h-5 mb-1 shrink-0"></i>
+                    <span class="text-[11px] leading-tight">Kas RT</span>
                 </button>
-                <button onclick="switchMainTab('iuran')" id="nav-iuran" class="flex flex-col items-center justify-center py-1.5 rounded-xl text-slate-400 hover:text-slate-600 font-medium transition-all">
-                    <i data-lucide="banknote" class="w-5 h-5 mb-0.5"></i>
-                    <span class="text-[10px]">Iuran</span>
+                <button onclick="switchMainTab('iuran')" id="nav-iuran" class="flex flex-col items-center justify-center py-2 px-1 rounded-xl text-slate-500 hover:text-slate-700 font-medium transition-all">
+                    <i data-lucide="banknote" class="w-5 h-5 mb-1 shrink-0"></i>
+                    <span class="text-[11px] leading-tight">Iuran</span>
                 </button>
-                <button onclick="switchMainTab('layanan')" id="nav-layanan" class="flex flex-col items-center justify-center py-1.5 rounded-xl text-slate-400 hover:text-slate-600 font-medium transition-all">
-                    <i data-lucide="file-text" class="w-5 h-5 mb-0.5"></i>
-                    <span class="text-[10px]">Layanan</span>
+                <button onclick="switchMainTab('layanan')" id="nav-layanan" class="flex flex-col items-center justify-center py-2 px-1 rounded-xl text-slate-500 hover:text-slate-700 font-medium transition-all">
+                    <i data-lucide="file-text" class="w-5 h-5 mb-1 shrink-0"></i>
+                    <span class="text-[11px] leading-tight">Layanan</span>
                 </button>
                 <!-- Tab Admin (Muncul otomatis setelah buka kunci PIN) -->
-                <button onclick="switchMainTab('admin')" id="nav-admin" class="hidden flex-col items-center justify-center py-1.5 rounded-xl text-slate-400 hover:text-slate-600 font-medium transition-all">
-                    <i data-lucide="shield-check" class="w-5 h-5 mb-0.5"></i>
-                    <span class="text-[10px]">Admin</span>
+                <button onclick="switchMainTab('admin')" id="nav-admin" class="hidden flex-col items-center justify-center py-2 px-1 rounded-xl text-slate-500 hover:text-slate-700 font-medium transition-all">
+                    <i data-lucide="shield-check" class="w-5 h-5 mb-1 shrink-0"></i>
+                    <span class="text-[11px] leading-tight">Admin</span>
                 </button>
             </div>
         </nav>
@@ -1040,7 +1032,7 @@
             </div>
         </div>
 
-        <!-- MODAL 4: Bagikan Laporan Iuran ke WhatsApp (KHUSUS ADMIN ONLY) -->
+        <!-- MODAL 4: Bagikan Laporan Iuran ke WhatsApp (KHUSUS ADMIN ONLY, TANPA ICON UANG) -->
         <div id="modal-wa-share" class="fixed inset-0 z-50 hidden bg-slate-900/75 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 no-print">
             <div class="bg-white rounded-t-3xl sm:rounded-3xl max-w-md w-full p-4 sm:p-5 shadow-2xl space-y-3 max-h-[94dvh] flex flex-col">
                 <div class="flex items-center justify-between shrink-0">
@@ -1050,7 +1042,7 @@
                         </div>
                         <div>
                             <h3 class="font-extrabold text-sm text-slate-800">Bagikan Laporan Iuran ke WA</h3>
-                            <p class="text-[11px] text-slate-500">Laporan nominal setoran warga (Admin Only)</p>
+                            <p class="text-[11px] text-slate-500">Format rapi tanpa pemisah baris (Admin Only)</p>
                         </div>
                     </div>
                     <button onclick="closeModal('modal-wa-share')" class="p-1.5 rounded-xl text-slate-400 hover:bg-slate-100">
@@ -1102,7 +1094,7 @@
                         <select id="wa-report-status" onchange="updateWaReportPreview()" class="w-full bg-slate-50 border border-slate-200 text-slate-800 font-bold text-xs rounded-xl px-2.5 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-600">
                             <option value="all">Semua Warga</option>
                             <option value="paid">Sudah Setor (&gt; Rp 0)</option>
-                            <option value="unpaid">Nominal Rp 0</option>
+                            <option value="unpaid">Belum Setor (Rp 0)</option>
                         </select>
                     </div>
                 </div>
@@ -1111,7 +1103,7 @@
                 <div class="flex-1 min-h-0 flex flex-col">
                     <div class="flex items-center justify-between mb-1">
                         <span class="text-[11px] font-semibold text-slate-500">Pratinjau Pesan WhatsApp:</span>
-                        <span id="wa-format-hint" class="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">Anti-Potong di Layar HP</span>
+                        <span id="wa-format-hint" class="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">Nominal Utuh Anti-Pecah</span>
                     </div>
                     <textarea id="wa-share-textarea" rows="10" class="w-full flex-1 bg-slate-900 text-emerald-100 border border-slate-700 rounded-2xl p-3 text-[11px] font-mono leading-relaxed focus:outline-none"></textarea>
                 </div>
@@ -1317,7 +1309,7 @@
     </div>
 
     <!-- ===================================================================== -->
-    <!-- LOGIKA APLIKASI & FIREBASE COMPAT SDK (APP + DATABASE)                -->
+    <!-- LOGIKA APLIKASI & FIREBASE REALTIME AUTO-SYNC                         -->
     <!-- ===================================================================== -->
     <script>
         // =====================================================================
@@ -1332,9 +1324,9 @@
         }
         const db = firebase.database();
 
-        const CACHE_STORAGE_KEY = 'portal_rt04_nominal_cache_v1';
-        const ADMIN_UNLOCK_KEY = 'portal_rt04_admin_session_v1';
-        const BANNER_CLOSED_KEY = 'portal_rt04_banner_closed_v1';
+        const CACHE_STORAGE_KEY = 'portal_rt04_nominal_cache_v2';
+        const ADMIN_UNLOCK_KEY = 'portal_rt04_admin_session_v2';
+        const BANNER_CLOSED_KEY = 'portal_rt04_banner_closed_v2';
 
         // Definisi 12 Bulan (Januari s.d. Desember)
         const MONTH_DEFS = [
@@ -1466,6 +1458,7 @@
         let titleTapCount = 0;
         let titleTapTimer = null;
         let deferredInstallPrompt = null;
+        let autoSyncIntervalId = null;
 
         // =====================================================================
         // 4. GENERATE MANIFEST PWA & IKON STANDALONE
@@ -1562,7 +1555,7 @@
         }
 
         // =====================================================================
-        // 5. NORMALISASI DATA NOMINAL & SINKRONISASI FIREBASE REALTIME DATABASE
+        // 5. NORMALISASI DATA NOMINAL & FIREBASE REALTIME + AUTO-SYNC 15 DETIK
         // =====================================================================
         function normalizeSettingsRecord(raw) {
             const val = raw || {};
@@ -1655,26 +1648,61 @@
         function updateCloudBadge(mode) {
             const dot = document.getElementById('cloud-dot');
             const label = document.getElementById('cloud-label');
+            if (!dot || !label) return;
             if (mode === 'live') {
                 dot.className = 'w-2 h-2 rounded-full bg-emerald-300 animate-pulse';
-                label.textContent = 'Live Cloud';
+                label.textContent = 'Live Auto-Sync';
             } else if (mode === 'syncing') {
                 dot.className = 'w-2 h-2 rounded-full bg-amber-300 animate-ping';
-                label.textContent = 'Menyimpan...';
+                label.textContent = 'Menyinkronkan...';
             } else {
                 dot.className = 'w-2 h-2 rounded-full bg-rose-400';
                 label.textContent = 'Mode Offline';
             }
         }
 
+        async function performSilentAutoSync() {
+            if (document.visibilityState === 'hidden') return;
+            try {
+                const snap = await db.ref().once('value');
+                const val = snap.val();
+                if (val && (val.settings || val.residents || val.transactions || val.announcements || val.patrols)) {
+                    const nextState = normalizeRootPayload(val);
+                    const nextJson = JSON.stringify(nextState);
+                    const prevJson = JSON.stringify(state);
+                    if (nextJson !== prevJson) {
+                        state = nextState;
+                        try {
+                            localStorage.setItem(CACHE_STORAGE_KEY, nextJson);
+                        } catch (e) {}
+                        renderAll(false);
+                    }
+                }
+                updateCloudBadge('live');
+            } catch (err) {
+                updateCloudBadge('offline');
+            }
+        }
+
         async function initFirebaseRealtimeSync() {
-            // Muat cache lokal segera agar tampilan instan
+            // Muat cache lokal segera agar tampilan instan saat dibuka
             try {
                 const cached = localStorage.getItem(CACHE_STORAGE_KEY);
                 if (cached) {
                     state = normalizeRootPayload(JSON.parse(cached));
                     renderAll(true);
                 }
+            } catch (e) {}
+
+            // Pantau status koneksi Firebase (.info/connected) secara real-time
+            try {
+                db.ref('.info/connected').on('value', (snap) => {
+                    if (snap.val() === true) {
+                        updateCloudBadge('live');
+                    } else {
+                        updateCloudBadge('offline');
+                    }
+                });
             } catch (e) {}
 
             try {
@@ -1700,7 +1728,7 @@
                 console.warn('Initial Firebase check warning:', err);
             }
 
-            // Listener real-time untuk 5 node utama
+            // Listener real-time .on('value') untuk 5 node utama
             ['settings', 'residents', 'transactions', 'announcements', 'patrols'].forEach(nodeName => {
                 db.ref(nodeName).on('value', (snap) => {
                     const val = snap.val();
@@ -1731,9 +1759,25 @@
                     updateCloudBadge('offline');
                 });
             });
+
+            // Auto-sync saat tab/layar HP dibuka kembali (visibilitychange & focus)
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible') {
+                    performSilentAutoSync();
+                }
+            });
+            window.addEventListener('focus', () => {
+                performSilentAutoSync();
+            });
+
+            // Background auto-sync otomatis setiap 15 detik untuk memastikan tampilan Warga selalu mutakhir
+            if (autoSyncIntervalId) clearInterval(autoSyncIntervalId);
+            autoSyncIntervalId = setInterval(() => {
+                performSilentAutoSync();
+            }, 15000);
         }
 
-        async function saveNodeToFirebase(nodeName, dataValue, showNotify = true, toastText = 'Perubahan tersimpan ke Live Cloud!') {
+        async function saveNodeToFirebase(nodeName, dataValue, showNotify = true, toastText = 'Perubahan tersimpan ke Live Auto-Sync!') {
             state[nodeName] = dataValue;
             try {
                 localStorage.setItem(CACHE_STORAGE_KEY, JSON.stringify(state));
@@ -1749,28 +1793,6 @@
             } catch (err) {
                 updateCloudBadge('offline');
                 if (showNotify) showToast('Tersimpan lokal (Mode Offline).');
-            }
-        }
-
-        async function manualRefreshCloud() {
-            const icon = document.getElementById('cloud-refresh-icon');
-            icon.classList.add('animate-spin');
-            try {
-                updateCloudBadge('syncing');
-                const snap = await db.ref().once('value');
-                const val = snap.val();
-                if (val && (val.settings || val.residents)) {
-                    state = normalizeRootPayload(val);
-                    localStorage.setItem(CACHE_STORAGE_KEY, JSON.stringify(state));
-                    renderAll(false);
-                }
-                updateCloudBadge('live');
-                showToast('Data terbaru berhasil disinkronkan!');
-            } catch (e) {
-                updateCloudBadge('offline');
-                showToast('Gagal menyegarkan: periksa koneksi internet.');
-            } finally {
-                setTimeout(() => icon.classList.remove('animate-spin'), 450);
             }
         }
 
@@ -1859,7 +1881,7 @@
 
             settingsDraft = null;
             hasUnsavedSettings = false;
-            await saveNodeToFirebase('settings', updatedSettings, true, '✅ Semua pengaturan berhasil disimpan!');
+            await saveNodeToFirebase('settings', updatedSettings, true, 'Semua pengaturan berhasil disimpan!');
         }
 
         // =====================================================================
@@ -1908,7 +1930,7 @@
                 closeModal('modal-pin');
                 setAdminMode(true);
                 switchMainTab('admin');
-                showToast('🔓 Mode Admin terbuka!');
+                showToast('Mode Admin terbuka!');
             } else {
                 document.getElementById('pin-error-text').classList.remove('hidden');
             }
@@ -1927,7 +1949,7 @@
             if (activeTab === 'admin') {
                 switchMainTab('beranda');
             }
-            showToast('🔒 Mode Admin dikunci. Kembali ke mode Warga.');
+            showToast('Mode Admin dikunci. Kembali ke mode Warga.');
         }
 
         function setAdminMode(enabled) {
@@ -1988,10 +2010,10 @@
                 if (!sec || !btn) return;
                 if (t === tab) {
                     sec.classList.remove('hidden');
-                    btn.className = `${t === 'admin' && !isAdmin ? 'hidden' : 'flex'} flex-col items-center justify-center py-1.5 rounded-xl text-emerald-800 font-bold bg-emerald-50 transition-all`;
+                    btn.className = `${t === 'admin' && !isAdmin ? 'hidden' : 'flex'} flex-col items-center justify-center py-2 px-1 rounded-xl text-emerald-800 font-bold bg-emerald-50 transition-all`;
                 } else {
                     sec.classList.add('hidden');
-                    btn.className = `${t === 'admin' && !isAdmin ? 'hidden' : 'flex'} flex-col items-center justify-center py-1.5 rounded-xl text-slate-400 hover:text-slate-600 font-medium transition-all`;
+                    btn.className = `${t === 'admin' && !isAdmin ? 'hidden' : 'flex'} flex-col items-center justify-center py-2 px-1 rounded-xl text-slate-500 hover:text-slate-700 font-medium transition-all`;
                 }
             });
 
@@ -2042,10 +2064,14 @@
         }
 
         // =====================================================================
-        // 9. HELPER FORMAT NOMINAL RUPIAH & PERHITUNGAN
+        // 9. HELPER FORMAT NOMINAL RUPIAH (TERMASUK NON-BREAKING SPACE UNTUK WA)
         // =====================================================================
         function formatRupiah(num) {
             return 'Rp ' + Number(num || 0).toLocaleString('id-ID');
+        }
+
+        function formatRupiahNbsp(num) {
+            return 'Rp\u00A0' + Number(num || 0).toLocaleString('id-ID');
         }
 
         function formatCompactNominal(num) {
@@ -2069,10 +2095,6 @@
 
         function getCitizenYearlyNominal(resident) {
             return MONTH_DEFS.reduce((acc, d) => acc + getCitizenMonthNominal(resident, d.key), 0);
-        }
-
-        function getCitizenPaidMonthsCount(resident) {
-            return MONTH_DEFS.filter(d => getCitizenMonthNominal(resident, d.key) > 0).length;
         }
 
         function getCitizenPortalUrl() {
@@ -2483,7 +2505,7 @@
             });
 
             closeModal('modal-edit-month-nominal');
-            saveNodeToFirebase('residents', updated, true, `✅ Nominal iuran diperbarui: ${formatRupiah(newAmt)}`);
+            saveNodeToFirebase('residents', updated, true, `Nominal iuran diperbarui: ${formatRupiah(newAmt)}`);
         }
 
         function open12MonthsModal(id) {
@@ -2568,11 +2590,11 @@
                 r.id === editing12MonthsId ? { ...r, months: cleanMonths } : r
             );
             closeModal('modal-12months');
-            saveNodeToFirebase('residents', updated, true, '✅ Nominal iuran 12 bulan berhasil disimpan!');
+            saveNodeToFirebase('residents', updated, true, 'Nominal iuran 12 bulan berhasil disimpan!');
         }
 
         // =====================================================================
-        // 13. FORMAT LAPORAN WHATSAPP KHUSUS ADMIN ONLY (NOMINAL RUPIAH)
+        // 13. FORMAT LAPORAN WHATSAPP KHUSUS ADMIN ONLY (TANPA ICON UANG, Rp\u00A0)
         // =====================================================================
         function padRight(str, len) {
             const s = String(str || '');
@@ -2615,7 +2637,7 @@
             });
         }
 
-        // MODE 1: Daftar Rapi HP (Rekomendasi) — Menampilkan Nominal Rupiah tiap warga
+        // MODE 1: Daftar Rapi HP (Rekomendasi) — Tanpa icon uang & memakai non-breaking space (\u00A0)
         function buildWaMode1List(monthKey, statusFilter) {
             const s = state.settings;
             const mDef = MONTH_DEFS.find(m => m.key === monthKey) || MONTH_DEFS[10];
@@ -2624,36 +2646,38 @@
 
             const list = getFilteredResidentsForWaReport(monthKey, statusFilter);
             const sectionHeading = statusFilter === 'paid'
-                ? '*WARGA SUDAH SETOR (> Rp 0):*'
+                ? '*WARGA SUDAH SETOR (> Rp\u00A00):*'
                 : statusFilter === 'unpaid'
-                    ? '*WARGA BELUM SETOR (Rp 0):*'
+                    ? '*WARGA BELUM SETOR (Rp\u00A00):*'
                     : '*RINCIAN SETORAN WARGA:*';
 
             const lines = list.map((r, i) => {
                 const no = String(i + 1).padStart(2, '0');
                 const blok = shortBlockLabel(r.block);
                 const nom = getCitizenMonthNominal(r, monthKey);
-                const icon = nom > 0 ? '💵' : '⏳';
-                return `${icon} *${no}. ${blok}* | ${r.name} — *${formatRupiah(nom)}*`;
+                const nomFormatted = nom > 0
+                    ? `*${formatRupiahNbsp(nom)}*`
+                    : `_${formatRupiahNbsp(0)}_`;
+                return `${no}. *${blok}* · ${r.name} : ${nomFormatted}`;
             });
 
             return [
                 `📊 *LAPORAN IURAN WARGA ${s.rtName.toUpperCase()}*`,
                 `_${s.areaName}_`,
                 `Periode: *${mDef.full} ${s.year}*`,
-                `💰 Saldo Kas RT: *${formatRupiah(saldo)}*`,
-                `💵 Total Terkumpul: *${formatRupiah(stats.collected)}* (${stats.paidKK}/${stats.totalKK} KK)`,
+                `💰 Saldo Kas RT: *${formatRupiahNbsp(saldo)}*`,
+                `✅ Total Terkumpul: *${formatRupiahNbsp(stats.collected)}* (${stats.paidKK}/${stats.totalKK} KK)`,
                 ``,
                 sectionHeading,
                 ...(lines.length ? lines : ['_- Tidak ada data warga pada filter ini -_']),
                 ``,
-                `Ringkasan: 💵 ${stats.paidKK} KK Setor • ⏳ ${stats.unpaidKK} KK Rp 0`,
+                `Ringkasan: *${stats.paidKK} KK Setor* • *${stats.unpaidKK} KK Belum (${formatRupiahNbsp(0)})*`,
                 `Cek detail & kas RT secara live:`,
                 `👉 ${getCitizenPortalUrl()}`
             ].join('\n');
         }
 
-        // MODE 2: Tabel Ringkas (Maksimal 28 Karakter agar lurus di layar HP)
+        // MODE 2: Tabel Ringkas (Maksimal 28 Karakter agar lurus di layar HP, tanpa icon uang)
         function buildWaMode2Table28(monthKey, statusFilter) {
             const s = state.settings;
             const mDef = MONTH_DEFS.find(m => m.key === monthKey) || MONTH_DEFS[10];
@@ -2667,7 +2691,7 @@
                 const blok = padRight(shortBlockLabel(r.block), 4);
                 const nama = padRight(compactPersonName(r.name, 11), 11);
                 const nom = getCitizenMonthNominal(r, monthKey);
-                const nomStr = padLeft(nom > 0 ? formatCompactNominal(nom) : 'Rp 0', 7);
+                const nomStr = padLeft(nom > 0 ? formatCompactNominal(nom) : '0', 7);
                 return `${blok} | ${nama} | ${nomStr}`;
             });
 
@@ -2681,19 +2705,19 @@
                 `📊 *LAPORAN IURAN ${s.rtName.toUpperCase()}*`,
                 `_${s.areaName}_`,
                 `Periode: *${mDef.full} ${s.year}*`,
-                `💰 Saldo Kas: *${formatRupiah(saldo)}*`,
-                `💵 Terkumpul: *${formatRupiah(stats.collected)}* (${stats.paidKK}/${stats.totalKK} KK)`,
+                `💰 Saldo Kas: *${formatRupiahNbsp(saldo)}*`,
+                `✅ Terkumpul: *${formatRupiahNbsp(stats.collected)}* (${stats.paidKK}/${stats.totalKK} KK)`,
                 ``,
                 '```',
                 tableBlock,
                 '```',
-                `Ringkasan: 💵 ${stats.paidKK} KK Setor • ⏳ ${stats.unpaidKK} KK Rp 0`,
+                `Ringkasan: *${stats.paidKK} KK Setor* • *${stats.unpaidKK} KK Belum*`,
                 `Cek detail & kas RT secara live:`,
                 `👉 ${getCitizenPortalUrl()}`
             ].join('\n');
         }
 
-        // MODE 3: Rekap Setahun (Jan–Des) — Akumulasi Nominal Rupiah per Warga
+        // MODE 3: Rekap Setahun (Jan–Des) — Akumulasi Nominal Rupiah per Warga (tanpa icon uang)
         function buildWaMode3Yearly(statusFilter, yearlyStyle) {
             const s = state.settings;
             const { saldo } = calculateCashTotals();
@@ -2727,8 +2751,8 @@
                 return [
                     `📊 *REKAP IURAN ${s.year} ${s.rtName.toUpperCase()}*`,
                     `_${s.areaName}_`,
-                    `💰 Saldo Kas RT: *${formatRupiah(saldo)}*`,
-                    `💵 Total Setahun: *${formatRupiah(grandSum)}*`,
+                    `💰 Saldo Kas RT: *${formatRupiahNbsp(saldo)}*`,
+                    `✅ Total Setahun: *${formatRupiahNbsp(grandSum)}*`,
                     ``,
                     '```',
                     tableBlock,
@@ -2738,19 +2762,22 @@
                 ].join('\n');
             }
 
-            // Gaya Daftar Rapi HP untuk Rekap Setahun
-            const lines = list.map(r => {
+            // Gaya Daftar Rapi HP untuk Rekap Setahun (tanpa icon uang, dengan Rp\u00A0)
+            const lines = list.map((r, i) => {
+                const no = String(i + 1).padStart(2, '0');
                 const blok = shortBlockLabel(r.block);
                 const yrSum = getCitizenYearlyNominal(r);
-                const icon = yrSum > 0 ? '💵' : '⏳';
-                return `${icon} *${blok}* ${r.name} — *${formatRupiah(yrSum)}*`;
+                const nomFormatted = yrSum > 0
+                    ? `*${formatRupiahNbsp(yrSum)}*`
+                    : `_${formatRupiahNbsp(0)}_`;
+                return `${no}. *${blok}* · ${r.name} : ${nomFormatted}`;
             });
 
             return [
                 `📊 *REKAP IURAN TAHUN ${s.year} (${s.rtName.toUpperCase()})*`,
                 `_${s.areaName}_`,
-                `💰 Saldo Kas RT: *${formatRupiah(saldo)}*`,
-                `💵 Total Setahun: *${formatRupiah(grandSum)}*`,
+                `💰 Saldo Kas RT: *${formatRupiahNbsp(saldo)}*`,
+                `✅ Total Setahun: *${formatRupiahNbsp(grandSum)}*`,
                 ``,
                 `*AKUMULASI SETORAN PER WARGA:*`,
                 ...(lines.length ? lines : ['_- Tidak ada data warga pada filter ini -_']),
@@ -2796,7 +2823,7 @@
             } else {
                 monthWrap.classList.remove('hidden');
                 yearlyWrap.classList.add('hidden');
-                hint.textContent = fmt === 'table28' ? 'Lebar ≤ 28 Karakter' : 'Anti-Potong di Layar HP';
+                hint.textContent = fmt === 'table28' ? 'Lebar ≤ 28 Karakter' : 'Nominal Utuh Anti-Pecah';
             }
 
             updateWaReportPreview();
@@ -2826,7 +2853,7 @@
             ta.setSelectionRange(0, 99999);
             try {
                 document.execCommand('copy');
-                showToast('✅ Teks laporan WhatsApp berhasil disalin!');
+                showToast('Teks laporan WhatsApp berhasil disalin!');
             } catch (e) {
                 showToast('Gagal menyalin teks.');
             }
@@ -2839,10 +2866,10 @@
             const { totalMasuk, totalKeluar, saldo } = calculateCashTotals();
 
             const recentLines = state.transactions.slice(0, 5).map(t =>
-                `${t.type === 'income' ? '➕' : '➖'} ${t.desc} (${formatRupiah(t.amount)})`
+                `${t.type === 'income' ? '➕' : '➖'} ${t.desc} (${formatRupiahNbsp(t.amount)})`
             ).join('\n');
 
-            const text = `📊 *LAPORAN TRANSPARANSI KAS ${s.rtName.toUpperCase()}*\n_${s.areaName}_\n\n📥 *Total Pemasukan:* ${formatRupiah(totalMasuk)}\n📤 *Total Pengeluaran:* ${formatRupiah(totalKeluar)}\n💰 *SALDO AKHIR KAS:* *${formatRupiah(saldo)}*\n\n📝 *Transaksi Terkini:*\n${recentLines || '- Belum ada transaksi'}\n\nCek rincian lengkap & iuran warga secara live:\n👉 ${getCitizenPortalUrl()}`;
+            const text = `📊 *LAPORAN TRANSPARANSI KAS ${s.rtName.toUpperCase()}*\n_${s.areaName}_\n\n📥 *Total Pemasukan:* ${formatRupiahNbsp(totalMasuk)}\n📤 *Total Pengeluaran:* ${formatRupiahNbsp(totalKeluar)}\n💰 *SALDO AKHIR KAS:* *${formatRupiahNbsp(saldo)}*\n\n📝 *Transaksi Terkini:*\n${recentLines || '- Belum ada transaksi'}\n\nCek rincian lengkap & iuran warga secara live:\n👉 ${getCitizenPortalUrl()}`;
 
             window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
         }
@@ -3055,7 +3082,7 @@
             if (mode === 'append') {
                 const updated = [...state.residents, ...parsedBulkItems];
                 closeModal('modal-bulk-import');
-                saveNodeToFirebase('residents', updated, true, `✅ ${parsedBulkItems.length} warga berhasil ditambahkan!`);
+                saveNodeToFirebase('residents', updated, true, `${parsedBulkItems.length} warga berhasil ditambahkan!`);
             } else if (mode === 'replace') {
                 openCustomConfirm(
                     'Ganti Semua Data?',
@@ -3063,7 +3090,7 @@
                     () => {
                         const updated = [...parsedBulkItems];
                         closeModal('modal-bulk-import');
-                        saveNodeToFirebase('residents', updated, true, `✅ Daftar warga diganti dengan ${parsedBulkItems.length} data baru!`);
+                        saveNodeToFirebase('residents', updated, true, `Daftar warga diganti dengan ${parsedBulkItems.length} data baru!`);
                     }
                 );
             }
@@ -3319,7 +3346,7 @@
             try {
                 const ok = document.execCommand('copy');
                 if (ok) {
-                    showToast('✅ Seluruh kode HTML disalin! Siap ditempel di GitHub.');
+                    showToast('Seluruh kode HTML disalin! Siap ditempel di GitHub.');
                 } else {
                     showToast('Gagal menyalin otomatis. Gunakan tombol Salin kode di atas.');
                 }
@@ -3341,7 +3368,7 @@
                 link.click();
                 document.body.removeChild(link);
                 setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
-                showToast('✅ File index.html berhasil diunduh!');
+                showToast('File index.html berhasil diunduh!');
             } catch (err) {
                 showToast('Gagal mengunduh file index.html.');
             }
