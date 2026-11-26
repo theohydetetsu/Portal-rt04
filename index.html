@@ -575,7 +575,7 @@
             </section>
 
             <!-- ============================================================= -->
-            <!-- TAB 4: LAYANAN WARGA (SURAT, ADUAN & KONFIRMASI TRANSFER)     -->
+            <!-- TAB 4: LAYANAN WARGA (SURAT, ADUAN & AKSES PENGURUS CADANGAN)  -->
             <!-- ============================================================= -->
             <section id="view-layanan" class="hidden space-y-3.5">
                 <div class="bg-slate-200/80 dark:bg-slate-800 p-1 rounded-xl grid grid-cols-2 gap-1">
@@ -698,10 +698,18 @@
                         </button>
                     </form>
                 </div>
+
+                <!-- Tautan Halus Akses Pengurus RT (Cadangan jika lupa tap judul 5x) -->
+                <div class="pt-3 text-center">
+                    <button type="button" onclick="openPinModal()" class="inline-flex items-center gap-1 text-[11px] font-medium text-slate-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors">
+                        <i data-lucide="key-round" class="w-3 h-3"></i>
+                        <span>Akses Pengurus RT</span>
+                    </button>
+                </div>
             </section>
 
             <!-- ============================================================= -->
-            <!-- TAB 5: ADMIN (TERBUKA SETELAH PIN BENAR)                      -->
+            <!-- TAB 5: ADMIN (TERSEMBUNYI UNTUK WARGA, MUNCUL SETELAH PIN)    -->
             <!-- ============================================================= -->
             <section id="view-admin" class="hidden space-y-3.5">
                 <div class="bg-slate-200/90 dark:bg-slate-800 p-1 rounded-xl grid grid-cols-4 gap-1">
@@ -1210,10 +1218,10 @@
         </main>
 
         <!-- ================================================================= -->
-        <!-- 3. BILAH NAVIGASI BAWAH 5 TAB (SHRINK-0 + SAFE-AREA-INSET)         -->
+        <!-- 3. BILAH NAVIGASI BAWAH (4 TAB UNTUK WARGA, 5 TAB SAAT ADMIN)      -->
         <!-- ================================================================= -->
         <nav id="app-nav" class="shrink-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 px-2 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] z-30 no-print">
-            <div class="grid grid-cols-5 gap-1">
+            <div id="app-nav-grid" class="grid grid-cols-4 gap-1">
                 <button type="button" onclick="switchMainTab('beranda')" id="nav-beranda" class="flex flex-col items-center justify-center py-2 px-1 rounded-xl text-emerald-800 dark:text-emerald-300 font-bold bg-emerald-50 dark:bg-emerald-950/70 transition-all">
                     <i data-lucide="home" class="w-5 h-5 mb-1 shrink-0"></i>
                     <span class="text-[11px] leading-tight">Beranda</span>
@@ -1230,8 +1238,9 @@
                     <i data-lucide="file-text" class="w-5 h-5 mb-1 shrink-0"></i>
                     <span class="text-[11px] leading-tight">Layanan</span>
                 </button>
-                <button type="button" onclick="switchMainTab('admin')" id="nav-admin" class="flex flex-col items-center justify-center py-2 px-1 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-700 font-medium transition-all">
-                    <i id="nav-admin-icon" data-lucide="lock" class="w-5 h-5 mb-1 shrink-0"></i>
+                <!-- Tab Admin Disembunyikan dari Tampilan Warga & Hanya Muncul Setelah PIN Benar -->
+                <button type="button" onclick="switchMainTab('admin')" id="nav-admin" class="hidden flex-col items-center justify-center py-2 px-1 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-700 font-medium transition-all">
+                    <i id="nav-admin-icon" data-lucide="shield-check" class="w-5 h-5 mb-1 shrink-0"></i>
                     <span class="text-[11px] leading-tight">Admin</span>
                 </button>
             </div>
@@ -2449,7 +2458,7 @@
         }
 
         // =====================================================================
-        // 7. HAK AKSES WARGA VS ADMIN (5x TAP JUDUL ATAU KETUK TAB ADMIN)
+        // 7. HAK AKSES WARGA VS ADMIN (MENU ADMIN TERSEMBUNYI UNTUK WARGA)
         // =====================================================================
         function initAccessRole() {
             const params = new URLSearchParams(window.location.search);
@@ -2520,11 +2529,23 @@
             isAdmin = Boolean(enabled);
 
             const adminBar = document.getElementById('admin-active-bar');
-            adminBar.classList.toggle('hidden', !isAdmin);
+            if (adminBar) adminBar.classList.toggle('hidden', !isAdmin);
 
-            const navAdminIcon = document.getElementById('nav-admin-icon');
-            if (navAdminIcon) {
-                navAdminIcon.setAttribute('data-lucide', isAdmin ? 'shield-check' : 'lock');
+            // Sembunyikan tab Admin dari navigasi warga (4 kolom simetris untuk warga, 5 kolom untuk Admin)
+            const navGrid = document.getElementById('app-nav-grid');
+            const navAdminBtn = document.getElementById('nav-admin');
+            if (navGrid && navAdminBtn) {
+                if (isAdmin) {
+                    navGrid.classList.remove('grid-cols-4');
+                    navGrid.classList.add('grid-cols-5');
+                    navAdminBtn.classList.remove('hidden');
+                    navAdminBtn.classList.add('flex');
+                } else {
+                    navGrid.classList.remove('grid-cols-5');
+                    navGrid.classList.add('grid-cols-4');
+                    navAdminBtn.classList.add('hidden');
+                    navAdminBtn.classList.remove('flex');
+                }
             }
 
             const btnShareKas = document.getElementById('btn-admin-share-kas');
@@ -2552,10 +2573,18 @@
             }
             activeTab = tab;
 
+            const availableTabs = isAdmin
+                ? ['beranda', 'kas', 'iuran', 'layanan', 'admin']
+                : ['beranda', 'kas', 'iuran', 'layanan'];
+
             ['beranda', 'kas', 'iuran', 'layanan', 'admin'].forEach(t => {
                 const sec = document.getElementById(`view-${t}`);
                 const btn = document.getElementById(`nav-${t}`);
                 if (!sec || !btn) return;
+                if (!availableTabs.includes(t)) {
+                    sec.classList.add('hidden');
+                    return;
+                }
                 if (t === tab) {
                     sec.classList.remove('hidden');
                     btn.className = 'flex flex-col items-center justify-center py-2 px-1 rounded-xl text-emerald-800 dark:text-emerald-300 font-bold bg-emerald-50 dark:bg-emerald-950/70 transition-all';
@@ -3375,7 +3404,6 @@
             const mDef = MONTH_DEFS.find(m => m.key === trf.monthKey) || MONTH_DEFS[10];
             const autoCash = document.getElementById('acc-auto-cash-checkbox')?.checked;
 
-            // Cari warga berdasarkan ID atau kecocokan blok/nama
             let targetResident = state.residents.find(r => r.id === trf.residentId);
             if (!targetResident) {
                 targetResident = state.residents.find(r =>
@@ -3397,7 +3425,6 @@
                     await db.ref(`residents/${targetResident.id}/months/${trf.monthKey}`).set(Number(trf.amount) || 0);
                 } catch (e) {}
             } else {
-                // Buat otomatis data warga baru jika warga input manual
                 const newResId = 'w_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
                 const months = createEmptyNominalMonths(0);
                 months[trf.monthKey] = Number(trf.amount) || 0;
@@ -3484,17 +3511,42 @@
         // =====================================================================
         function buildResidentsMapObject(residentsArray) {
             const mapObj = {};
-            residentsArray.forEach(r => {
-                const cleanId = r.id || ('w_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6));
-                mapObj[cleanId] = {
-                    id: cleanId,
-                    name: r.name,
-                    block: r.block || '-',
+            residentsArray.forEach((r, idx) => {
+                const key = r.id ? String(r.id) : ('w_' + Date.now() + '_' + idx);
+                const monthsClean = {};
+                MONTH_DEFS.forEach(d => {
+                    monthsClean[d.key] = Math.max(0, Math.round(Number(r.months && r.months[d.key]) || 0));
+                });
+                mapObj[key] = {
+                    id: key,
+                    name: String(r.name || 'Warga').trim(),
+                    block: String(r.block || '-').trim().toUpperCase() || '-',
                     phone: normalizeWaNumber(r.phone || ''),
-                    months: r.months || createEmptyNominalMonths(0)
+                    months: monthsClean
                 };
             });
             return mapObj;
+        }
+
+        async function saveResidentsMapToFirebase(residentsArray, toastText = 'Database warga diperbarui!') {
+            const sortedArray = residentsObjectToSortedArray(residentsArray, state.settings.monthlyFee);
+            const mapPayload = buildResidentsMapObject(sortedArray);
+
+            state.residents = sortedArray;
+            try {
+                localStorage.setItem(CACHE_STORAGE_KEY, JSON.stringify(state));
+            } catch (e) {}
+            renderAll(true);
+
+            try {
+                updateCloudBadge('syncing');
+                await db.ref('residents').set(mapPayload);
+                updateCloudBadge('live');
+                showToast(toastText);
+            } catch (err) {
+                updateCloudBadge('offline');
+                showToast('Tersimpan lokal (Mode Offline).');
+            }
         }
 
         async function quickAddResidentToDatabase(e) {
@@ -3510,7 +3562,7 @@
             const phone = normalizeWaNumber(phoneInput.value || '');
 
             if (!name) {
-                showToast('Nama lengkap warga wajib diisi.');
+                showToast('Nama warga wajib diisi!');
                 return;
             }
 
@@ -3526,8 +3578,10 @@
             blockInput.value = '';
             nameInput.value = '';
             phoneInput.value = '';
+            blockInput.focus();
 
-            state.residents = residentsObjectToSortedArray([...state.residents, newRecord], state.settings.monthlyFee);
+            const nextList = [...state.residents, newRecord];
+            state.residents = residentsObjectToSortedArray(nextList, state.settings.monthlyFee);
             try {
                 localStorage.setItem(CACHE_STORAGE_KEY, JSON.stringify(state));
             } catch (err) {}
@@ -3537,10 +3591,10 @@
                 updateCloudBadge('syncing');
                 await db.ref(`residents/${newId}`).set(newRecord);
                 updateCloudBadge('live');
-                showToast(`Warga ${name} (${block}) tersimpan ke database!`);
+                showToast(`Warga ${name} (${block}) disimpan ke database!`);
             } catch (err) {
                 updateCloudBadge('offline');
-                showToast('Tersimpan lokal (Mode Offline).');
+                showToast(`Warga ${name} tersimpan lokal (Mode Offline).`);
             }
         }
 
@@ -3549,8 +3603,12 @@
                 showToast('Database warga masih kosong.');
                 return;
             }
-            const lines = state.residents.map(r => `${r.block} | ${r.name}${r.phone ? ' | ' + r.phone : ''}`);
+            const lines = state.residents.map(r => {
+                const ph = r.phone ? ` | ${r.phone}` : '';
+                return `${r.block} | ${r.name}${ph}`;
+            });
             const text = lines.join('\n');
+
             const ta = document.createElement('textarea');
             ta.value = text;
             ta.style.position = 'fixed';
@@ -3560,246 +3618,145 @@
             ta.setSelectionRange(0, text.length);
             try {
                 document.execCommand('copy');
-                showToast(`Backup ${state.residents.length} warga disalin ke clipboard!`);
+                showToast(`${state.residents.length} data warga berhasil disalin!`);
             } catch (e) {
-                showToast('Gagal menyalin backup database.');
+                showToast('Gagal menyalin backup warga.');
             }
             document.body.removeChild(ta);
         }
 
-        function openBulkImportModal() {
-            if (!isAdmin) return;
-            document.getElementById('bulk-textarea').value = '';
-            parsedBulkItems = [];
-            updateBulkImportPreview();
-            openModal('modal-bulk-import');
-        }
-
-        function parseBulkResidentsText(rawText) {
-            const lines = String(rawText || '').split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-            const results = [];
-
-            lines.forEach(line => {
-                let cleaned = line.replace(/^\d+[\.\)\-]\s+/, '').trim();
-                if (!cleaned) return;
-
-                let phone = '';
-                const phoneMatch = cleaned.match(/(\+?628\d{7,12}|08\d{7,12})/);
-                if (phoneMatch) {
-                    phone = normalizeWaNumber(phoneMatch[1]);
-                    cleaned = cleaned.replace(phoneMatch[1], '').replace(/[\|\-,;]+$/g, '').trim();
-                }
-
-                let block = '-';
-                let name = cleaned;
-
-                if (cleaned.includes('|')) {
-                    const parts = cleaned.split('|').map(p => p.trim()).filter(Boolean);
-                    if (parts.length >= 2) {
-                        if (/^[A-Za-z0-9\-\/]{1,10}$/.test(parts[0]) && parts[0].length <= parts[1].length) {
-                            block = parts[0].toUpperCase();
-                            name = parts[1];
-                        } else {
-                            name = parts[0];
-                            block = parts[1].toUpperCase();
-                        }
-                    }
-                } else if (/^([A-Za-z]{1,4}\s*[-–]?\s*\d{1,4}[A-Za-z]?)\s*[-–:,]\s*(.+)$/.test(cleaned)) {
-                    const m = cleaned.match(/^([A-Za-z]{1,4}\s*[-–]?\s*\d{1,4}[A-Za-z]?)\s*[-–:,]\s*(.+)$/);
-                    block = m[1].replace(/\s+/g, '').toUpperCase();
-                    name = m[2].trim();
-                } else if (/^(.+?)\s*\(([A-Za-z]{1,4}\s*[-–]?\s*\d{1,4}[A-Za-z]?)\)$/.test(cleaned)) {
-                    const m = cleaned.match(/^(.+?)\s*\(([A-Za-z]{1,4}\s*[-–]?\s*\d{1,4}[A-Za-z]?)\)$/);
-                    name = m[1].trim();
-                    block = m[2].replace(/\s+/g, '').toUpperCase();
-                } else if (cleaned.includes(',')) {
-                    const parts = cleaned.split(',').map(p => p.trim()).filter(Boolean);
-                    if (parts.length >= 2) {
-                        if (parts[0].length <= 10) {
-                            block = parts[0].toUpperCase();
-                            name = parts[1];
-                        } else {
-                            name = parts[0];
-                            block = parts[1].toUpperCase();
-                        }
-                    }
-                }
-
-                if (name) {
-                    results.push({ block: block || '-', name, phone });
-                }
-            });
-
-            return results;
-        }
-
-        function updateBulkImportPreview() {
-            const raw = document.getElementById('bulk-textarea').value;
-            parsedBulkItems = parseBulkResidentsText(raw);
-            document.getElementById('bulk-detected-count').textContent = `${parsedBulkItems.length} Warga Terdeteksi`;
-
-            const sampleBox = document.getElementById('bulk-preview-samples');
-            if (!parsedBulkItems.length) {
-                sampleBox.innerHTML = `<p class="text-slate-400 italic">Tempel daftar nama di atas untuk melihat pratinjau otomatis...</p>`;
-                return;
-            }
-            const samples = parsedBulkItems.slice(0, 6);
-            sampleBox.innerHTML = samples.map((item, i) => `
-                <div class="flex items-center justify-between bg-white dark:bg-slate-800 px-2.5 py-1.5 rounded-lg border border-emerald-100 dark:border-slate-700">
-                    <span class="truncate font-semibold text-slate-800 dark:text-slate-100">${i + 1}. ${item.name}</span>
-                    <span class="font-mono font-bold text-[10px] text-emerald-700 dark:text-emerald-300 shrink-0 ml-2">${item.block}${item.phone ? ' • WA' : ''}</span>
-                </div>
-            `).join('') + (parsedBulkItems.length > 6 ? `<p class="text-[10px] text-emerald-700 dark:text-emerald-300 font-semibold pt-0.5">+ ${parsedBulkItems.length - 6} warga lainnya siap diimpor...</p>` : '');
-        }
-
-        async function executeBulkImport(mode) {
-            if (!isAdmin) return;
-            if (!parsedBulkItems.length) {
-                showToast('Belum ada nama warga yang terdeteksi di kotak teks.');
-                return;
-            }
-
-            const now = Date.now();
-            const newRecords = parsedBulkItems.map((item, idx) => ({
-                id: 'w_' + (now + idx) + '_' + Math.random().toString(36).slice(2, 5),
-                name: item.name,
-                block: item.block,
-                phone: item.phone || '',
-                months: createEmptyNominalMonths(0)
-            }));
-
-            if (mode === 'replace') {
-                openCustomConfirm(
-                    'Ganti Semua Database Warga?',
-                    `Seluruh data lama akan diganti dengan ${newRecords.length} warga baru dari daftar ini.`,
-                    async () => {
-                        const sorted = residentsObjectToSortedArray(newRecords, state.settings.monthlyFee);
-                        closeModal('modal-bulk-import');
-                        await saveNodeToFirebase('residents', buildResidentsMapObject(sorted), true, `${sorted.length} warga berhasil disimpan!`);
-                    }
-                );
-            } else {
-                const combined = residentsObjectToSortedArray([...state.residents, ...newRecords], state.settings.monthlyFee);
-                closeModal('modal-bulk-import');
-                await saveNodeToFirebase('residents', buildResidentsMapObject(combined), true, `${newRecords.length} warga ditambahkan ke database!`);
-            }
-        }
-
         function renderAdminNonSettingsPanels() {
-            // 1. Antrean Verifikasi Transfer
-            const pendingList = state.transfers || [];
-            document.getElementById('adm-pending-transfer-badge').textContent = `${pendingList.length} Menunggu`;
-            const trfBox = document.getElementById('list-admin-transfers');
+            const s = state.settings;
+            const totalKK = state.residents.length;
 
-            if (!pendingList.length) {
-                trfBox.innerHTML = `<div class="bg-slate-50 dark:bg-slate-900/60 rounded-xl p-3 text-center text-[11px] text-slate-400 border border-slate-200/70 dark:border-slate-700">Belum ada konfirmasi transfer yang menunggu verifikasi.</div>`;
-            } else {
-                trfBox.innerHTML = pendingList.map(trf => {
-                    const mDef = MONTH_DEFS.find(m => m.key === trf.monthKey) || MONTH_DEFS[10];
-                    return `
-                    <div class="bg-amber-50/70 dark:bg-slate-900/80 rounded-xl p-3 border border-amber-300/80 dark:border-amber-500/40 space-y-2">
-                        <div class="flex items-start justify-between gap-2">
-                            <div class="min-w-0">
-                                <div class="flex items-center gap-1.5">
-                                    <span class="px-1.5 py-0.5 rounded bg-slate-800 text-white font-bold text-[10px]">${trf.residentBlock}</span>
-                                    <p class="font-extrabold text-xs text-slate-800 dark:text-slate-100 truncate">${trf.residentName}</p>
+            const countPill = document.getElementById('adm-db-count-pill');
+            if (countPill) countPill.textContent = `${totalKK} KK`;
+            document.getElementById('adm-total-kk-info').textContent = `Total ${totalKK} Kepala Keluarga terdaftar`;
+
+            // Render Antrean Verifikasi Transfer
+            const trfBadge = document.getElementById('adm-pending-transfer-badge');
+            const trfList = document.getElementById('list-admin-transfers');
+            const pendingTransfers = state.transfers.filter(t => (t.status || 'pending') === 'pending');
+            if (trfBadge) trfBadge.textContent = `${pendingTransfers.length} Menunggu`;
+
+            if (trfList) {
+                if (!pendingTransfers.length) {
+                    trfList.innerHTML = `<div class="bg-slate-50 dark:bg-slate-900/70 rounded-xl p-3 text-center text-[11px] text-slate-400 border border-slate-200/70 dark:border-slate-700">Belum ada konfirmasi transfer baru dari warga.</div>`;
+                } else {
+                    trfList.innerHTML = pendingTransfers.map(t => {
+                        const mDef = MONTH_DEFS.find(m => m.key === t.monthKey) || MONTH_DEFS[10];
+                        return `
+                        <div class="bg-amber-50/70 dark:bg-slate-900/80 rounded-xl p-3 border border-amber-300/80 dark:border-amber-500/40 space-y-2">
+                            <div class="flex items-start justify-between gap-2">
+                                <div class="min-w-0">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="px-1.5 py-0.5 rounded bg-slate-800 text-white font-bold text-[10px]">${t.residentBlock || '-'}</span>
+                                        <p class="font-extrabold text-xs text-slate-800 dark:text-slate-100 truncate">${t.residentName}</p>
+                                    </div>
+                                    <p class="text-[10px] text-slate-600 dark:text-slate-300 mt-1">
+                                        Bulan <strong>${mDef.full}</strong> • ${t.method || 'Transfer'} • ${t.dateLabel || ''}
+                                    </p>
+                                    ${t.note ? `<p class="text-[10px] italic text-slate-500 dark:text-slate-400 mt-0.5">"${t.note}"</p>` : ''}
                                 </div>
-                                <p class="text-[10px] text-slate-600 dark:text-slate-300 mt-0.5">
-                                    Bulan <strong>${mDef.full}</strong> • ${trf.method} • ${trf.dateLabel || ''}
-                                </p>
-                                ${trf.note ? `<p class="text-[10px] text-slate-500 italic mt-0.5">"${trf.note}"</p>` : ''}
+                                <span class="font-mono font-extrabold text-xs text-emerald-800 dark:text-emerald-300 shrink-0">${formatRupiah(t.amount)}</span>
                             </div>
-                            <p class="font-mono font-extrabold text-xs text-emerald-800 dark:text-emerald-300 shrink-0">${formatRupiah(trf.amount)}</p>
-                        </div>
-                        <div class="grid grid-cols-2 gap-2">
-                            <button type="button" onclick="approveTransferItem('${trf.id}')" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-[11px] py-1.5 rounded-lg flex items-center justify-center gap-1">
-                                <i data-lucide="check" class="w-3.5 h-3.5"></i>
-                                <span>ACC Setoran</span>
-                            </button>
-                            <button type="button" onclick="rejectTransferItem('${trf.id}')" class="bg-white dark:bg-slate-800 hover:bg-rose-50 text-rose-600 border border-rose-200 dark:border-rose-800 font-bold text-[11px] py-1.5 rounded-lg flex items-center justify-center gap-1">
-                                <i data-lucide="x" class="w-3.5 h-3.5"></i>
-                                <span>Tolak</span>
-                            </button>
-                        </div>
-                    </div>`;
-                }).join('');
+                            <div class="grid grid-cols-2 gap-1.5 pt-1 border-t border-amber-200/80 dark:border-slate-700">
+                                <button type="button" onclick="approveTransferItem('${t.id}')" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-[11px] py-1.5 rounded-lg flex items-center justify-center gap-1">
+                                    <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                                    <span>ACC & Catat Lunas</span>
+                                </button>
+                                <button type="button" onclick="rejectTransferItem('${t.id}')" class="bg-white dark:bg-slate-800 hover:bg-rose-50 text-rose-600 border border-rose-200 dark:border-rose-800 font-bold text-[11px] py-1.5 rounded-lg">
+                                    Tolak
+                                </button>
+                            </div>
+                        </div>`;
+                    }).join('');
+                }
             }
 
-            // 2. Database Warga & Iuran
-            document.getElementById('adm-db-count-pill').textContent = `${state.residents.length} KK`;
-            document.getElementById('adm-total-kk-info').textContent = `Total ${state.residents.length} Kepala Keluarga terdaftar`;
-
+            // Render Bulan Aktif Iuran Admin
             const admStats = calculateMonthlyIuranStats(adminMonthKey);
             document.getElementById('adm-month-stats-badge').textContent = `${formatRupiah(admStats.collected)} (${admStats.paidKK}/${admStats.totalKK} KK)`;
 
             document.getElementById('admin-month-pills').innerHTML = MONTH_DEFS.map(def => {
                 const active = def.key === adminMonthKey;
                 return `
-                <button type="button" onclick="selectAdminMonth('${def.key}')" class="px-3 py-1 rounded-full text-[11px] font-bold shrink-0 transition-all ${active ? 'bg-emerald-700 text-white shadow-xs' : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-emerald-50'}">
+                <button type="button" onclick="selectAdminMonth('${def.key}')" class="px-3 py-1.5 rounded-full text-[11px] font-bold shrink-0 transition-all ${active ? 'bg-emerald-700 text-white shadow-xs' : 'bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-emerald-50'}">
                     ${def.short}
                 </button>`;
             }).join('');
 
             renderAdminCitizensList();
 
-            // 3. Riwayat Transaksi Kas di Admin
+            // Render Daftar Transaksi Kas di Admin
             document.getElementById('list-admin-transactions').innerHTML = state.transactions.length
                 ? state.transactions.map(t => `
-                    <div class="flex items-center justify-between gap-2 bg-slate-50 dark:bg-slate-900/70 rounded-xl px-3 py-2 border border-slate-200/80 dark:border-slate-700 text-xs">
+                    <div class="bg-slate-50 dark:bg-slate-900/70 rounded-xl p-2.5 border border-slate-200/80 dark:border-slate-700 flex items-center justify-between gap-2">
                         <div class="min-w-0">
-                            <p class="font-bold text-slate-800 dark:text-slate-100 truncate">${t.desc}</p>
-                            <p class="text-[10px] text-slate-400">${t.date} • ${t.type === 'income' ? '+' : '-'} ${formatRupiah(t.amount)}${t.receiptImage ? ' • Ada Nota' : ''}</p>
+                            <p class="font-bold text-xs text-slate-800 dark:text-slate-100 truncate">${t.desc}</p>
+                            <p class="text-[10px] text-slate-500 dark:text-slate-400">${t.date} • ${t.type === 'income' ? '+' : '-'}${formatRupiah(t.amount)}${t.receiptImage ? ' • [Ada Foto Nota]' : ''}</p>
                         </div>
-                        <button type="button" onclick="deleteTransaction('${t.id}')" class="p-1.5 rounded-lg text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 shrink-0"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        <button type="button" onclick="deleteCashTransaction('${t.id}')" class="p-1.5 rounded-lg bg-rose-50 dark:bg-rose-950/60 text-rose-600 hover:bg-rose-100 shrink-0">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                        </button>
                     </div>
                 `).join('')
-                : `<p class="text-[11px] text-slate-400 text-center py-2">Belum ada transaksi kas.</p>`;
+                : `<p class="text-xs text-slate-400 text-center py-3">Belum ada transaksi kas.</p>`;
 
-            // 4. Kelola Polling di Admin
-            document.getElementById('list-admin-polls').innerHTML = state.polls.length
-                ? state.polls.map(p => {
-                    const totalVotes = p.options.reduce((s, o) => s + (Number(o.votes) || 0), 0);
-                    return `
-                    <div class="flex items-center justify-between gap-2 bg-slate-50 dark:bg-slate-900/70 rounded-xl px-3 py-2 border border-slate-200/80 dark:border-slate-700 text-xs">
-                        <div class="min-w-0">
-                            <p class="font-bold text-slate-800 dark:text-slate-100 truncate">${p.question}</p>
-                            <p class="text-[10px] text-slate-400">${totalVotes} suara • ${p.active ? 'Aktif' : 'Ditutup'}</p>
-                        </div>
-                        <div class="flex items-center gap-1 shrink-0">
-                            <button type="button" onclick="togglePollStatus('${p.id}')" class="px-2 py-1 rounded-lg bg-amber-100 text-amber-900 font-bold text-[10px]">
-                                ${p.active ? 'Tutup' : 'Buka'}
-                            </button>
-                            <button type="button" onclick="deletePollItem('${p.id}')" class="p-1.5 rounded-lg text-rose-600 hover:bg-rose-50"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                        </div>
-                    </div>`;
-                }).join('')
-                : `<p class="text-[11px] text-slate-400 text-center py-2">Belum ada polling warga.</p>`;
+            // Render Daftar Polling di Admin
+            const admPollsEl = document.getElementById('list-admin-polls');
+            if (admPollsEl) {
+                admPollsEl.innerHTML = state.polls.length
+                    ? state.polls.map(p => {
+                        const tot = p.options.reduce((sum, o) => sum + (Number(o.votes) || 0), 0);
+                        return `
+                        <div class="bg-slate-50 dark:bg-slate-900/70 rounded-xl p-2.5 border border-slate-200/80 dark:border-slate-700 flex items-center justify-between gap-2">
+                            <div class="min-w-0">
+                                <p class="font-bold text-xs text-slate-800 dark:text-slate-100 truncate">${p.question}</p>
+                                <p class="text-[10px] text-slate-400">${tot} suara • ${p.active ? 'Aktif' : 'Ditutup'}</p>
+                            </div>
+                            <div class="flex items-center gap-1 shrink-0">
+                                <button type="button" onclick="togglePollActive('${p.id}')" class="px-2 py-1 rounded-lg text-[10px] font-bold ${p.active ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}">
+                                    ${p.active ? 'Tutup' : 'Buka'}
+                                </button>
+                                <button type="button" onclick="deletePollItem('${p.id}')" class="p-1.5 rounded-lg bg-rose-50 dark:bg-rose-950/60 text-rose-600">
+                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                </button>
+                            </div>
+                        </div>`;
+                    }).join('')
+                    : `<p class="text-xs text-slate-400 text-center py-2">Belum ada polling warga.</p>`;
+            }
 
-            // 5. Kelola Pengumuman di Admin
+            // Render Daftar Pengumuman di Admin
             document.getElementById('list-admin-announcements').innerHTML = state.announcements.length
                 ? state.announcements.map(a => `
-                    <div class="flex items-center justify-between gap-2 bg-slate-50 dark:bg-slate-900/70 rounded-xl px-3 py-2 border border-slate-200/80 dark:border-slate-700 text-xs">
+                    <div class="bg-slate-50 dark:bg-slate-900/70 rounded-xl p-2.5 border border-slate-200/80 dark:border-slate-700 flex items-center justify-between gap-2">
                         <div class="min-w-0">
-                            <p class="font-bold text-slate-800 dark:text-slate-100 truncate">${a.title}</p>
+                            <p class="font-bold text-xs text-slate-800 dark:text-slate-100 truncate">${a.title}</p>
                             <p class="text-[10px] text-slate-400">${a.category} • ${a.date}</p>
                         </div>
-                        <button type="button" onclick="deleteAnnouncement('${a.id}')" class="p-1.5 rounded-lg text-rose-600 hover:bg-rose-50 shrink-0"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        <button type="button" onclick="deleteAnnouncementItem('${a.id}')" class="p-1.5 rounded-lg bg-rose-50 dark:bg-rose-950/60 text-rose-600 hover:bg-rose-100 shrink-0">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                        </button>
                     </div>
                 `).join('')
-                : `<p class="text-[11px] text-slate-400 text-center py-2">Belum ada pengumuman.</p>`;
+                : `<p class="text-xs text-slate-400 text-center py-2">Belum ada pengumuman.</p>`;
 
-            // 6. Kelola Jadwal Ronda di Admin
+            // Render Daftar Jadwal Ronda di Admin
             document.getElementById('list-admin-patrols').innerHTML = state.patrols.length
                 ? state.patrols.map(r => `
-                    <div class="flex items-center justify-between gap-2 bg-slate-50 dark:bg-slate-900/70 rounded-xl p-2.5 border border-slate-200/80 dark:border-slate-700 text-xs">
+                    <div class="bg-slate-50 dark:bg-slate-900/70 rounded-xl p-2.5 border border-slate-200/80 dark:border-slate-700 flex items-center justify-between gap-2">
                         <div class="min-w-0">
-                            <p class="font-bold text-emerald-800 dark:text-emerald-300">${r.day}</p>
+                            <p class="font-bold text-xs text-emerald-800 dark:text-emerald-300">${r.day}</p>
                             <p class="text-[11px] text-slate-600 dark:text-slate-300 truncate">${r.members}</p>
                         </div>
-                        <button type="button" onclick="deletePatrol('${r.id}')" class="p-1.5 rounded-lg text-rose-600 hover:bg-rose-50 shrink-0"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        <button type="button" onclick="deletePatrolItem('${r.id}')" class="p-1.5 rounded-lg bg-rose-50 dark:bg-rose-950/60 text-rose-600 hover:bg-rose-100 shrink-0">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                        </button>
                     </div>
                 `).join('')
-                : `<p class="text-[11px] text-slate-400 text-center py-2">Belum ada jadwal ronda.</p>`;
+                : `<p class="text-xs text-slate-400 text-center py-2">Belum ada jadwal ronda.</p>`;
         }
 
         function selectAdminMonth(key) {
@@ -3809,68 +3766,134 @@
         }
 
         function renderAdminCitizensList() {
-            const q = (document.getElementById('adm-citizen-search').value || '').toLowerCase().trim();
-            const filtered = state.residents.filter(r =>
-                !q || r.name.toLowerCase().includes(q) || r.block.toLowerCase().includes(q) || (r.phone && r.phone.includes(q))
-            );
             const box = document.getElementById('list-admin-citizens');
-            const mDef = MONTH_DEFS.find(m => m.key === adminMonthKey) || MONTH_DEFS[10];
+            if (!box) return;
+
+            const q = (document.getElementById('adm-citizen-search')?.value || '').toLowerCase().trim();
+            const list = state.residents.filter(r =>
+                !q ||
+                r.name.toLowerCase().includes(q) ||
+                r.block.toLowerCase().includes(q) ||
+                (r.phone && r.phone.includes(q))
+            );
 
             if (!state.residents.length) {
-                box.innerHTML = `<div class="bg-white dark:bg-slate-800 rounded-2xl p-6 text-center text-xs text-slate-400 border border-slate-200/80 dark:border-slate-700">Database warga kosong. Silakan tambah warga baru atau gunakan Input Massal di atas.</div>`;
-                return;
-            }
-            if (!filtered.length) {
-                box.innerHTML = `<div class="bg-white dark:bg-slate-800 rounded-2xl p-6 text-center text-xs text-slate-400 border border-slate-200/80 dark:border-slate-700">Warga tidak ditemukan pada pencarian ini.</div>`;
+                box.innerHTML = `<div class="bg-white dark:bg-slate-800 rounded-2xl p-6 text-center text-xs text-slate-400 border border-slate-200/80 dark:border-slate-700">Database warga masih kosong. Gunakan formulir <strong>Tambah Warga Baru</strong> atau <strong>Input Massal</strong> di atas.</div>`;
                 return;
             }
 
-            box.innerHTML = filtered.map(r => {
-                const nominal = getCitizenMonthNominal(r, adminMonthKey);
+            if (!list.length) {
+                box.innerHTML = `<div class="bg-white dark:bg-slate-800 rounded-2xl p-6 text-center text-xs text-slate-400 border border-slate-200/80 dark:border-slate-700">Tidak ada warga yang cocok dengan pencarian "${q}".</div>`;
+                return;
+            }
+
+            const key = adminMonthKey;
+            const monthDef = MONTH_DEFS.find(m => m.key === key) || MONTH_DEFS[10];
+            const standardFee = Math.max(0, Number(state.settings.monthlyFee || 35000));
+
+            box.innerHTML = list.map(r => {
+                const nominal = getCitizenMonthNominal(r, key);
                 const hasPaid = nominal > 0;
-                const totalYear = getCitizenYearlyNominal(r);
-                const cleanWa = normalizeWaNumber(r.phone);
+                const yearlySum = getCitizenYearlyNominal(r);
+                const waUrl = buildCitizenReminderWaUrl(r, key);
 
                 return `
-                <div class="bg-white dark:bg-slate-800 rounded-2xl p-3 border border-slate-200/80 dark:border-slate-700 shadow-xs space-y-2.5">
+                <div class="bg-white dark:bg-slate-800 rounded-2xl p-3.5 border ${hasPaid ? 'border-emerald-200 dark:border-emerald-800/70' : 'border-slate-200/90 dark:border-slate-700'} shadow-xs space-y-2.5">
                     <div class="flex items-start justify-between gap-2">
                         <div class="min-w-0">
                             <div class="flex items-center gap-1.5">
                                 <span class="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-[10px]">${r.block}</span>
                                 <p class="font-bold text-xs text-slate-800 dark:text-slate-100 truncate">${r.name}</p>
                             </div>
-                            <p class="text-[10px] text-slate-400 mt-1">
-                                Total ${state.settings.year}: <strong class="text-slate-600 dark:text-slate-300">${formatRupiah(totalYear)}</strong>
-                                ${cleanWa ? ` • WA: <span class="font-mono text-emerald-700 dark:text-emerald-400">+${cleanWa}</span>` : ''}
+                            <p class="text-[11px] text-slate-400 mt-1">
+                                Total Setahun: <strong class="text-slate-700 dark:text-slate-200">${formatRupiah(yearlySum)}</strong>
+                                ${r.phone ? ` • WA: <span class="font-mono text-slate-600 dark:text-slate-300">+${r.phone}</span>` : ''}
                             </p>
                         </div>
-                        <div class="flex items-center gap-1 shrink-0">
-                            <button type="button" onclick="openEditResidentModal('${r.id}')" title="Edit Data Warga" class="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>
-                            <button type="button" onclick="deleteResident('${r.id}')" title="Hapus Warga" class="p-1.5 rounded-lg text-rose-600 hover:bg-rose-50"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
-                        </div>
+
+                        <button type="button" onclick="openEditSingleMonthModal('${r.id}', '${key}')" class="px-3 py-1.5 rounded-xl font-mono font-extrabold text-xs shrink-0 transition-all flex items-center gap-1.5 ${hasPaid ? 'bg-emerald-700 text-white shadow-xs' : 'bg-amber-100 dark:bg-amber-900/50 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-700'}">
+                            <span>${formatRupiah(nominal)}</span>
+                            <i data-lucide="pencil" class="w-3 h-3 opacity-80"></i>
+                        </button>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-2">
-                        <button type="button" onclick="openEditSingleMonthModal('${r.id}', '${adminMonthKey}')" class="py-2 px-2.5 rounded-xl font-mono text-[11px] font-extrabold flex items-center justify-center gap-1 transition-all ${hasPaid ? 'bg-emerald-700 text-white shadow-xs' : 'bg-amber-50 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800'}">
-                            <span>${mDef.short}: ${formatRupiah(nominal)}</span>
+                    <div class="flex items-center justify-between gap-1.5 pt-2 border-t border-slate-100 dark:border-slate-700">
+                        <button type="button" onclick="toggleQuickStandardNominal('${r.id}', '${key}')" class="px-2.5 py-1.5 rounded-lg text-[10px] font-bold transition-all ${hasPaid ? 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200' : 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100'}">
+                            ${hasPaid ? `Reset ${monthDef.short} Rp 0` : `+ Isi ${formatCompactNominal(standardFee)}`}
                         </button>
-                        <button type="button" onclick="open12MonthsModal('${r.id}')" class="py-2 px-2.5 rounded-xl text-[11px] font-bold bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 text-slate-800 dark:text-slate-100 flex items-center justify-center gap-1">
-                            <i data-lucide="calendar-days" class="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-300"></i>
-                            <span>12 Bulan (Jan-Des)</span>
-                        </button>
+
+                        <div class="flex items-center gap-1">
+                            <button type="button" onclick="open12MonthsModal('${r.id}')" class="px-2 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 text-emerald-800 dark:text-emerald-300 text-[10px] font-bold flex items-center gap-1">
+                                <i data-lucide="calendar-range" class="w-3 h-3"></i>
+                                <span>12 Bln</span>
+                            </button>
+                            <a href="${waUrl}" target="_blank" rel="noopener noreferrer" class="px-2 py-1.5 rounded-lg bg-green-600 hover:bg-green-700 text-white text-[10px] font-bold flex items-center gap-1">
+                                <i data-lucide="send" class="w-3 h-3"></i>
+                                <span>WA</span>
+                            </a>
+                            <button type="button" onclick="openEditResidentModal('${r.id}')" title="Edit Data Warga" class="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-200 hover:bg-slate-200">
+                                <i data-lucide="user-pen" class="w-3.5 h-3.5"></i>
+                            </button>
+                            <button type="button" onclick="deleteResidentItem('${r.id}')" title="Hapus Warga dari Database" class="p-1.5 rounded-lg bg-rose-50 dark:bg-rose-950/60 text-rose-600 hover:bg-rose-100">
+                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>`;
             }).join('');
             lucide.createIcons();
         }
 
-        // Modal Edit Nominal 1 Bulan
+        function buildCitizenReminderWaUrl(resident, monthKey) {
+            const s = state.settings;
+            const mDef = MONTH_DEFS.find(m => m.key === monthKey) || MONTH_DEFS[10];
+            const nominal = getCitizenMonthNominal(resident, monthKey);
+            const hasPaid = nominal > 0;
+            const text = hasPaid
+                ? `Halo ${resident.name} (${resident.block}),\nTerima kasih atas setoran Iuran Warga ${s.rtName} bulan *${mDef.full} ${s.year}* sebesar *${formatRupiah(nominal)}*.`
+                : `Assalamu'alaikum / Halo ${resident.name} (${resident.block}),\nMenginformasikan pengingat Iuran Kas ${s.rtName} bulan *${mDef.full} ${s.year}* (standar ${formatRupiah(s.monthlyFee)}). Terima kasih.`;
+            const encoded = encodeURIComponent(text);
+            return resident.phone
+                ? `https://wa.me/${resident.phone}?text=${encoded}`
+                : `https://api.whatsapp.com/send?text=${encoded}`;
+        }
+
+        async function toggleQuickStandardNominal(residentId, monthKey) {
+            if (!isAdmin) return;
+            const fee = Math.max(0, Number(state.settings.monthlyFee || 35000));
+            let targetNominal = 0;
+
+            const updated = state.residents.map(r => {
+                if (r.id !== residentId) return r;
+                const months = { ...createEmptyNominalMonths(0) };
+                MONTH_DEFS.forEach(d => { months[d.key] = getCitizenMonthNominal(r, d.key); });
+                targetNominal = months[monthKey] > 0 ? 0 : fee;
+                months[monthKey] = targetNominal;
+                return { ...r, months };
+            });
+
+            state.residents = updated;
+            try { localStorage.setItem(CACHE_STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+            renderAll(true);
+
+            try {
+                updateCloudBadge('syncing');
+                await db.ref(`residents/${residentId}/months/${monthKey}`).set(targetNominal);
+                updateCloudBadge('live');
+                showToast('Nominal iuran diperbarui!');
+            } catch (err) {
+                updateCloudBadge('offline');
+                showToast('Tersimpan lokal (Mode Offline).');
+            }
+        }
+
         function openEditSingleMonthModal(residentId, monthKey) {
             if (!isAdmin) return;
             const r = state.residents.find(x => x.id === residentId);
             if (!r) return;
             const mDef = MONTH_DEFS.find(m => m.key === monthKey) || MONTH_DEFS[10];
             const fee = Math.max(0, Number(state.settings.monthlyFee || 35000));
+            const halfFee = Math.round(fee / 2);
 
             editingSingleMonthResidentId = residentId;
             editingSingleMonthKey = monthKey;
@@ -3880,10 +3903,10 @@
             document.getElementById('emn-citizen-block').textContent = `Blok / Rumah: ${r.block}`;
             document.getElementById('emn-amount-input').value = getCitizenMonthNominal(r, monthKey);
             document.getElementById('emn-quick-standard').textContent = formatRupiah(fee);
-            document.getElementById('emn-quick-half').textContent = formatRupiah(Math.round(fee / 2));
+            document.getElementById('emn-quick-half').textContent = formatRupiah(halfFee);
 
             openModal('modal-edit-month-nominal');
-            setTimeout(() => document.getElementById('emn-amount-input').focus(), 100);
+            setTimeout(() => document.getElementById('emn-amount-input').select(), 100);
         }
 
         function applyQuickSingleNominal(preset) {
@@ -3897,7 +3920,7 @@
         async function saveSingleMonthNominal(e) {
             e.preventDefault();
             if (!isAdmin || !editingSingleMonthResidentId || !editingSingleMonthKey) return;
-            const newNominal = Math.max(0, Math.round(Number(document.getElementById('emn-amount-input').value) || 0));
+            const val = Math.max(0, Math.round(Number(document.getElementById('emn-amount-input').value) || 0));
             const resId = editingSingleMonthResidentId;
             const mKey = editingSingleMonthKey;
 
@@ -3905,29 +3928,26 @@
                 if (r.id !== resId) return r;
                 const months = { ...createEmptyNominalMonths(0) };
                 MONTH_DEFS.forEach(d => { months[d.key] = getCitizenMonthNominal(r, d.key); });
-                months[mKey] = newNominal;
+                months[mKey] = val;
                 return { ...r, months };
             });
 
             closeModal('modal-edit-month-nominal');
             state.residents = updated;
-            try {
-                localStorage.setItem(CACHE_STORAGE_KEY, JSON.stringify(state));
-            } catch (e) {}
+            try { localStorage.setItem(CACHE_STORAGE_KEY, JSON.stringify(state)); } catch (err) {}
             renderAll(true);
 
             try {
                 updateCloudBadge('syncing');
-                await db.ref(`residents/${resId}/months/${mKey}`).set(newNominal);
+                await db.ref(`residents/${resId}/months/${mKey}`).set(val);
                 updateCloudBadge('live');
-                showToast(`Setoran disimpan: ${formatRupiah(newNominal)}`);
+                showToast(`Setoran disimpan (${formatRupiah(val)})!`);
             } catch (err) {
                 updateCloudBadge('offline');
                 showToast('Tersimpan lokal (Mode Offline).');
             }
         }
 
-        // Modal Atur 12 Bulan Nominal Per Warga
         function open12MonthsModal(residentId) {
             if (!isAdmin) return;
             const r = state.residents.find(x => x.id === residentId);
@@ -3937,51 +3957,54 @@
             MONTH_DEFS.forEach(d => {
                 temp12MonthsObj[d.key] = getCitizenMonthNominal(r, d.key);
             });
+
+            const fee = Math.max(0, Number(state.settings.monthlyFee || 35000));
             document.getElementById('m12-citizen-name').textContent = r.name;
             document.getElementById('m12-citizen-block').textContent = `Blok / Rumah: ${r.block}`;
-            document.getElementById('m12-fill-all-btn').textContent = `Isi Semua ${formatCompactNominal(state.settings.monthlyFee)}`;
-            render12MonthsGrid();
+            document.getElementById('m12-fill-all-btn').textContent = `Isi Semua ${formatCompactNominal(fee)}`;
+            render12MonthsModalGrid();
             openModal('modal-12months');
         }
 
-        function render12MonthsGrid() {
-            const fee = Math.max(0, Number(state.settings.monthlyFee || 35000));
-            let totalYear = 0;
-            let activeMonths = 0;
+        function render12MonthsModalGrid() {
+            let sum = 0;
+            let paidCount = 0;
             MONTH_DEFS.forEach(d => {
-                const v = Number(temp12MonthsObj[d.key] || 0);
-                totalYear += v;
-                if (v > 0) activeMonths++;
+                const v = Math.max(0, Number(temp12MonthsObj[d.key]) || 0);
+                sum += v;
+                if (v > 0) paidCount++;
             });
-            document.getElementById('m12-summary-label').textContent = `${formatRupiah(totalYear)} (${activeMonths}/12 bln)`;
+
+            document.getElementById('m12-summary-label').textContent = `${formatRupiah(sum)} (${paidCount}/12 bln)`;
 
             document.getElementById('m12-months-grid').innerHTML = MONTH_DEFS.map(def => {
-                const val = Number(temp12MonthsObj[def.key] || 0);
-                const hasVal = val > 0;
+                const val = Math.max(0, Number(temp12MonthsObj[def.key]) || 0);
+                const active = val > 0;
                 return `
-                <div class="p-2.5 rounded-xl border ${hasVal ? 'bg-emerald-50/70 dark:bg-emerald-950/50 border-emerald-300 dark:border-emerald-700' : 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700'} space-y-1.5">
+                <div class="p-2.5 rounded-xl border transition-all ${active ? 'bg-emerald-50 dark:bg-emerald-950/50 border-emerald-400 dark:border-emerald-700' : 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700'} space-y-1">
                     <div class="flex items-center justify-between">
-                        <span class="font-extrabold text-xs ${hasVal ? 'text-emerald-900 dark:text-emerald-300' : 'text-slate-600 dark:text-slate-400'}">${def.full}</span>
-                        <button type="button" onclick="quickFill12MonthItem('${def.key}', ${val > 0 ? 0 : fee})" class="text-[9px] font-bold px-1.5 py-0.5 rounded ${hasVal ? 'bg-amber-100 text-amber-800' : 'bg-emerald-700 text-white'}">
-                            ${hasVal ? 'Reset 0' : formatCompactNominal(fee)}
+                        <label class="text-[11px] font-extrabold ${active ? 'text-emerald-900 dark:text-emerald-300' : 'text-slate-600 dark:text-slate-400'}">${def.full}</label>
+                        <button type="button" onclick="quickFillOneMonthIn12Modal('${def.key}')" class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100">
+                            ${active ? '0' : 'Standar'}
                         </button>
                     </div>
                     <div class="relative">
-                        <span class="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">Rp</span>
-                        <input type="number" inputmode="numeric" min="0" step="500" value="${val}" onchange="updateTemp12MonthNominal('${def.key}', this.value)" class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg pl-7 pr-2 py-1.5 text-xs font-mono font-extrabold text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-emerald-600">
+                        <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">Rp</span>
+                        <input type="number" inputmode="numeric" min="0" step="500" value="${val}" onchange="updateTemp12MonthValue('${def.key}', this.value)" class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg pl-7 pr-2 py-1.5 text-xs font-mono font-bold text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-emerald-600">
                     </div>
                 </div>`;
             }).join('');
         }
 
-        function updateTemp12MonthNominal(key, rawVal) {
+        function updateTemp12MonthValue(key, rawVal) {
             temp12MonthsObj[key] = Math.max(0, Math.round(Number(rawVal) || 0));
-            render12MonthsGrid();
+            render12MonthsModalGrid();
         }
 
-        function quickFill12MonthItem(key, val) {
-            temp12MonthsObj[key] = Math.max(0, Math.round(Number(val) || 0));
-            render12MonthsGrid();
+        function quickFillOneMonthIn12Modal(key) {
+            const fee = Math.max(0, Number(state.settings.monthlyFee || 35000));
+            temp12MonthsObj[key] = (Number(temp12MonthsObj[key]) || 0) > 0 ? 0 : fee;
+            render12MonthsModalGrid();
         }
 
         function setAll12MonthsNominal(mode) {
@@ -3989,30 +4012,144 @@
             MONTH_DEFS.forEach(d => {
                 temp12MonthsObj[d.key] = mode === 'standard' ? fee : 0;
             });
-            render12MonthsGrid();
+            render12MonthsModalGrid();
         }
 
         async function save12MonthsNominal() {
             if (!isAdmin || !editing12MonthsId) return;
             const resId = editing12MonthsId;
-            const cleanMonths = { ...temp12MonthsObj };
+            const monthsCopy = { ...temp12MonthsObj };
 
-            const updated = state.residents.map(r => (r.id === resId ? { ...r, months: cleanMonths } : r));
+            const updated = state.residents.map(r =>
+                r.id === resId ? { ...r, months: monthsCopy } : r
+            );
+
             closeModal('modal-12months');
             state.residents = updated;
-            try {
-                localStorage.setItem(CACHE_STORAGE_KEY, JSON.stringify(state));
-            } catch (e) {}
+            try { localStorage.setItem(CACHE_STORAGE_KEY, JSON.stringify(state)); } catch (err) {}
             renderAll(true);
 
             try {
                 updateCloudBadge('syncing');
-                await db.ref(`residents/${resId}/months`).set(cleanMonths);
+                await db.ref(`residents/${resId}/months`).set(monthsCopy);
                 updateCloudBadge('live');
-                showToast('Rincian iuran 12 bulan berhasil disimpan!');
+                showToast('Nominal iuran 12 bulan berhasil disimpan!');
             } catch (err) {
                 updateCloudBadge('offline');
                 showToast('Tersimpan lokal (Mode Offline).');
+            }
+        }
+
+        // =====================================================================
+        // 14. INPUT MASSAL WARGA (COPY-PASTE PULUHAN NAMA SEKALIGUS)
+        // =====================================================================
+        function openBulkImportModal() {
+            if (!isAdmin) return;
+            document.getElementById('bulk-textarea').value = '';
+            parsedBulkItems = [];
+            updateBulkImportPreview();
+            openModal('modal-bulk-import');
+        }
+
+        function parseBulkResidentsLines(rawText) {
+            const lines = String(rawText || '').split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+            const results = [];
+
+            lines.forEach((line, idx) => {
+                let clean = line.replace(/^\d+[\.\)\-]\s*/, '').trim();
+                if (!clean) return;
+
+                let phone = '';
+                const phoneMatch = clean.match(/(?:\+?62|0)8\d{7,12}/);
+                if (phoneMatch) {
+                    phone = normalizeWaNumber(phoneMatch[0]);
+                    clean = clean.replace(phoneMatch[0], '').replace(/[|\-,;]+$/g, '').trim();
+                }
+
+                let block = '';
+                let name = '';
+
+                if (clean.includes('|')) {
+                    const parts = clean.split('|').map(p => p.trim()).filter(Boolean);
+                    block = parts[0] || '';
+                    name = parts[1] || '';
+                } else if (clean.includes('\t')) {
+                    const parts = clean.split('\t').map(p => p.trim()).filter(Boolean);
+                    block = parts[0] || '';
+                    name = parts[1] || '';
+                } else if (/^([A-Za-z0-9]{1,6}(?:[\-\/][A-Za-z0-9]{1,6})?)\s*[\-\:\,]\s*(.+)$/.test(clean)) {
+                    const m = clean.match(/^([A-Za-z0-9]{1,6}(?:[\-\/][A-Za-z0-9]{1,6})?)\s*[\-\:\,]\s*(.+)$/);
+                    block = m[1].trim();
+                    name = m[2].trim();
+                } else if (/\(([A-Za-z0-9\-\/]{1,10})\)\s*$/.test(clean)) {
+                    const m = clean.match(/^(.+?)\s*\(([A-Za-z0-9\-\/]{1,10})\)\s*$/);
+                    name = m[1].trim();
+                    block = m[2].trim();
+                } else {
+                    name = clean;
+                    block = `W-${String(idx + 1).padStart(2, '0')}`;
+                }
+
+                name = name.replace(/^[\-\|\,\:\s]+|[\-\|\,\:\s]+$/g, '').trim();
+                block = block.replace(/^[\-\|\,\:\s]+|[\-\|\,\:\s]+$/g, '').toUpperCase().trim() || '-';
+
+                if (name) {
+                    results.push({ block, name, phone });
+                }
+            });
+
+            return results;
+        }
+
+        function updateBulkImportPreview() {
+            const raw = document.getElementById('bulk-textarea').value;
+            parsedBulkItems = parseBulkResidentsLines(raw);
+            document.getElementById('bulk-detected-count').textContent = `${parsedBulkItems.length} Warga Terdeteksi`;
+
+            const box = document.getElementById('bulk-preview-samples');
+            if (!parsedBulkItems.length) {
+                box.innerHTML = `<p class="text-slate-400 italic">Tempel daftar nama di atas untuk melihat pratinjau otomatis...</p>`;
+                return;
+            }
+            const sample = parsedBulkItems.slice(0, 5);
+            box.innerHTML = sample.map(item => `
+                <div class="flex items-center justify-between bg-white dark:bg-slate-800 px-2.5 py-1 rounded-lg border border-emerald-200/70 dark:border-slate-700">
+                    <span class="font-bold text-emerald-800 dark:text-emerald-300 text-[10px]">${item.block}</span>
+                    <span class="font-semibold text-slate-800 dark:text-slate-100 truncate max-w-[160px]">${item.name}</span>
+                    <span class="text-[10px] text-slate-400 font-mono">${item.phone ? '+' + item.phone : '-'}</span>
+                </div>
+            `).join('') + (parsedBulkItems.length > 5 ? `<p class="text-[10px] text-emerald-800 dark:text-emerald-300 font-semibold pt-0.5">+ ${parsedBulkItems.length - 5} warga lainnya...</p>` : '');
+        }
+
+        function executeBulkImport(mode) {
+            if (!isAdmin) return;
+            if (!parsedBulkItems.length) {
+                showToast('Belum ada nama warga yang terdeteksi.');
+                return;
+            }
+
+            const now = Date.now();
+            const newRecords = parsedBulkItems.map((item, idx) => ({
+                id: `w_${now}_${idx}_${Math.random().toString(36).slice(2, 5)}`,
+                name: item.name,
+                block: item.block,
+                phone: item.phone,
+                months: createEmptyNominalMonths(0)
+            }));
+
+            if (mode === 'replace') {
+                openCustomConfirm(
+                    'Ganti Semua Data Warga?',
+                    `Seluruh daftar warga lama akan diganti dengan ${newRecords.length} warga baru hasil copy-paste. Lanjutkan?`,
+                    async () => {
+                        closeModal('modal-bulk-import');
+                        await saveResidentsMapToFirebase(newRecords, `${newRecords.length} warga berhasil menggantikan daftar lama!`);
+                    }
+                );
+            } else {
+                const combined = [...state.residents, ...newRecords];
+                closeModal('modal-bulk-import');
+                saveResidentsMapToFirebase(combined, `${newRecords.length} warga berhasil ditambahkan!`);
             }
         }
 
@@ -4020,6 +4157,7 @@
             if (!isAdmin) return;
             const r = state.residents.find(x => x.id === id);
             if (!r) return;
+            document.getElementById('rf-modal-title').textContent = 'Edit Data Warga';
             document.getElementById('rf-id').value = r.id;
             document.getElementById('rf-block').value = r.block;
             document.getElementById('rf-name').value = r.name;
@@ -4030,62 +4168,319 @@
         async function saveResidentForm(e) {
             e.preventDefault();
             if (!isAdmin) return;
-            const id = document.getElementById('rf-id').value;
-            const block = document.getElementById('rf-block').value.trim().toUpperCase();
+            const editId = document.getElementById('rf-id').value;
+            const block = document.getElementById('rf-block').value.trim().toUpperCase() || '-';
             const name = document.getElementById('rf-name').value.trim();
-            const phone = normalizeWaNumber(document.getElementById('rf-phone').value.trim());
+            const phone = normalizeWaNumber(document.getElementById('rf-phone').value);
 
-            const updated = residentsObjectToSortedArray(
-                state.residents.map(r => (r.id === id ? { ...r, block, name, phone } : r)),
-                state.settings.monthlyFee
-            );
-            closeModal('modal-resident-form');
-            state.residents = updated;
-            renderAll(true);
-
-            try {
-                updateCloudBadge('syncing');
-                await db.ref(`residents/${id}`).update({ block, name, phone });
-                updateCloudBadge('live');
-                showToast('Data warga diperbarui!');
-            } catch (err) {
-                updateCloudBadge('offline');
-                showToast('Tersimpan lokal (Mode Offline).');
+            let updated;
+            if (editId) {
+                updated = state.residents.map(r =>
+                    r.id === editId ? { ...r, block, name, phone } : r
+                );
+            } else {
+                const newId = 'w_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+                updated = [
+                    ...state.residents,
+                    { id: newId, block, name, phone, months: createEmptyNominalMonths(0) }
+                ];
             }
+
+            closeModal('modal-resident-form');
+            await saveResidentsMapToFirebase(updated, editId ? 'Data warga diperbarui!' : 'Warga baru ditambahkan!');
         }
 
-        function deleteResident(id) {
+        function deleteResidentItem(id) {
             if (!isAdmin) return;
-            openCustomConfirm('Hapus Data Warga?', 'Data warga beserta riwayat setoran 12 bulannya akan dihapus.', async () => {
-                const updated = state.residents.filter(r => r.id !== id);
-                state.residents = updated;
+            const r = state.residents.find(x => x.id === id);
+            openCustomConfirm('Hapus Warga?', `Hapus "${r ? r.name : 'warga ini'}" dari daftar iuran?`, async () => {
+                const remaining = state.residents.filter(x => x.id !== id);
+                state.residents = remaining;
+                try { localStorage.setItem(CACHE_STORAGE_KEY, JSON.stringify(state)); } catch (err) {}
                 renderAll(true);
+
                 try {
                     updateCloudBadge('syncing');
                     await db.ref(`residents/${id}`).remove();
                     updateCloudBadge('live');
-                    showToast('Data warga berhasil dihapus.');
+                    showToast('Data warga dihapus.');
                 } catch (err) {
                     updateCloudBadge('offline');
-                    showToast('Dihapus lokal (Mode Offline).');
+                    showToast('Data warga dihapus lokal.');
                 }
             });
         }
 
         // =====================================================================
-        // 14. KAS RT (DENGAN KOMPRESI FOTO NOTA OTOMATIS), POLLING, PENGUMUMAN & RONDA
+        // 15. SHARE LAPORAN IURAN & KAS KE WHATSAPP (ADMIN ONLY)
+        // =====================================================================
+        function openWaIuranReportModal() {
+            if (!isAdmin) return;
+            const activeMonth = activeTab === 'admin' ? adminMonthKey : citizenMonthKey;
+            document.getElementById('wa-report-month').value = activeMonth;
+            document.getElementById('wa-report-status').value = 'all';
+            setWaReportFormat('list');
+            openModal('modal-wa-share');
+        }
+
+        function setWaReportFormat(fmt) {
+            waReportFormat = fmt;
+            const formats = ['list', 'table28', 'yearly'];
+            formats.forEach(k => {
+                const btn = document.getElementById(`wa-fmt-${k}`);
+                if (k === fmt) {
+                    btn.className = 'py-1.5 px-1.5 rounded-lg text-[10px] font-extrabold bg-white dark:bg-slate-700 text-emerald-800 dark:text-emerald-300 shadow-xs leading-tight text-center transition-all';
+                } else {
+                    btn.className = 'py-1.5 px-1.5 rounded-lg text-[10px] font-semibold text-slate-600 dark:text-slate-400 leading-tight text-center transition-all';
+                }
+            });
+
+            const monthWrap = document.getElementById('wa-month-picker-wrap');
+            const yearlyStyleWrap = document.getElementById('wa-yearly-style-wrap');
+            const hintEl = document.getElementById('wa-format-hint');
+
+            if (fmt === 'yearly') {
+                monthWrap.classList.add('hidden');
+                yearlyStyleWrap.classList.remove('hidden');
+                hintEl.textContent = 'Rekap 12 Bulan Jan–Des';
+            } else if (fmt === 'table28') {
+                monthWrap.classList.remove('hidden');
+                yearlyStyleWrap.classList.add('hidden');
+                hintEl.textContent = 'Maks 28 Karakter/Baris';
+            } else {
+                monthWrap.classList.remove('hidden');
+                yearlyStyleWrap.classList.add('hidden');
+                hintEl.textContent = 'Nominal Utuh Anti-Pecah';
+            }
+
+            updateWaReportPreview();
+        }
+
+        function padRightFixed(str, len) {
+            const clean = String(str || '').replace(/\s+/g, ' ').trim();
+            if (clean.length >= len) return clean.slice(0, len);
+            return clean + ' '.repeat(len - clean.length);
+        }
+
+        function padLeftFixed(str, len) {
+            const clean = String(str || '').trim();
+            if (clean.length >= len) return clean.slice(0, len);
+            return ' '.repeat(len - clean.length) + clean;
+        }
+
+        function buildWaMonthlyListMessage(mKey, statusFilter) {
+            const s = state.settings;
+            const mDef = MONTH_DEFS.find(m => m.key === mKey) || MONTH_DEFS[10];
+            const stats = calculateMonthlyIuranStats(mKey);
+            const portalUrl = getCitizenPortalUrl();
+
+            const filtered = state.residents.filter(r => {
+                const nom = getCitizenMonthNominal(r, mKey);
+                if (statusFilter === 'paid') return nom > 0;
+                if (statusFilter === 'unpaid') return nom <= 0;
+                return true;
+            });
+
+            const filterLabel = statusFilter === 'paid' ? 'Sudah Setor (> Rp 0)' :
+                                statusFilter === 'unpaid' ? 'Belum Setor (Rp 0)' : 'Semua Warga';
+
+            const lines = [
+                `*LAPORAN IURAN WARGA ${s.rtName.toUpperCase()}*`,
+                `${s.areaName}`,
+                `Periode : *${mDef.full} ${s.year}*`,
+                `Terkumpul : *${formatRupiahNbsp(stats.collected)}* (${stats.paidKK}/${stats.totalKK} KK)`,
+                `Filter : ${filterLabel}`,
+                `--------------------------------`
+            ];
+
+            if (!filtered.length) {
+                lines.push(`_(Tidak ada data warga pada filter ini)_`);
+            } else {
+                filtered.forEach((r, idx) => {
+                    const nom = getCitizenMonthNominal(r, mKey);
+                    const statusIcon = nom > 0 ? '✅' : '⏳';
+                    lines.push(`${idx + 1}. ${statusIcon} *${r.block}* - ${r.name} : *${formatRupiahNbsp(nom)}*`);
+                });
+            }
+
+            lines.push(`--------------------------------`);
+            lines.push(`Total ${mDef.full} ${s.year} : *${formatRupiahNbsp(stats.collected)}*`);
+            lines.push(`Portal Transparansi Warga: ${portalUrl}`);
+            return lines.join('\n');
+        }
+
+        function buildWaMonthlyTable28Message(mKey, statusFilter) {
+            const s = state.settings;
+            const mDef = MONTH_DEFS.find(m => m.key === mKey) || MONTH_DEFS[10];
+            const stats = calculateMonthlyIuranStats(mKey);
+            const portalUrl = getCitizenPortalUrl();
+
+            const filtered = state.residents.filter(r => {
+                const nom = getCitizenMonthNominal(r, mKey);
+                if (statusFilter === 'paid') return nom > 0;
+                if (statusFilter === 'unpaid') return nom <= 0;
+                return true;
+            });
+
+            const tableRows = [
+                'BLOK |NAMA         |NOMINAL ',
+                '-----+-------------+--------'
+            ];
+
+            if (!filtered.length) {
+                tableRows.push('Belum ada data warga        ');
+            } else {
+                filtered.forEach(r => {
+                    const nom = getCitizenMonthNominal(r, mKey);
+                    const blkCol = padRightFixed(r.block, 5);
+                    const nameCol = padRightFixed(r.name, 13);
+                    const nomStr = nom > 0 ? ('Rp' + formatCompactNominal(nom)) : 'Rp 0';
+                    const nomCol = padLeftFixed(nomStr, 8);
+                    tableRows.push(`${blkCol}|${nameCol}|${nomCol}`);
+                });
+            }
+
+            return [
+                `*LAPORAN IURAN ${s.rtName.toUpperCase()}*`,
+                `${mDef.full} ${s.year} • Total: *${formatRupiahNbsp(stats.collected)}*`,
+                '```',
+                ...tableRows,
+                '```',
+                `Setor: *${stats.paidKK}/${stats.totalKK} KK*`,
+                `Cek detail: ${portalUrl}`
+            ].join('\n');
+        }
+
+        function buildWaYearlyMessage(statusFilter) {
+            const s = state.settings;
+            const style = document.getElementById('wa-yearly-style')?.value || 'list';
+            const portalUrl = getCitizenPortalUrl();
+
+            let grandTotal = 0;
+            const rowsData = state.residents.map(r => {
+                const yearSum = getCitizenYearlyNominal(r);
+                const paidMonths = MONTH_DEFS.filter(d => getCitizenMonthNominal(r, d.key) > 0).length;
+                grandTotal += yearSum;
+                return { r, yearSum, paidMonths };
+            }).filter(item => {
+                if (statusFilter === 'paid') return item.yearSum > 0;
+                if (statusFilter === 'unpaid') return item.yearSum <= 0;
+                return true;
+            });
+
+            if (style === 'table27') {
+                const tbl = [
+                    'BLOK |NAMA       |BLN|TOTAL  ',
+                    '-----+-----------+---+-------'
+                ];
+                if (!rowsData.length) {
+                    tbl.push('Belum ada data warga       ');
+                } else {
+                    rowsData.forEach(item => {
+                        const bCol = padRightFixed(item.r.block, 5);
+                        const nCol = padRightFixed(item.r.name, 11);
+                        const mCol = padLeftFixed(`${item.paidMonths}`, 3);
+                        const tCol = padLeftFixed(item.yearSum > 0 ? formatCompactNominal(item.yearSum) : '0', 7);
+                        tbl.push(`${bCol}|${nCol}|${mCol}|${tCol}`);
+                    });
+                }
+                return [
+                    `*REKAP IURAN SETAHUN ${s.year}*`,
+                    `${s.rtName} • Total: *${formatRupiahNbsp(grandTotal)}*`,
+                    '```',
+                    ...tbl,
+                    '```',
+                    `Portal Warga: ${portalUrl}`
+                ].join('\n');
+            }
+
+            const lines = [
+                `*REKAP IURAN WARGA SETAHUN (${s.year})*`,
+                `${s.rtName} • ${s.areaName}`,
+                `Total Terkumpul Setahun : *${formatRupiahNbsp(grandTotal)}*`,
+                `--------------------------------`
+            ];
+
+            if (!rowsData.length) {
+                lines.push(`_(Tidak ada data warga pada filter ini)_`);
+            } else {
+                rowsData.forEach((item, idx) => {
+                    const icon = item.yearSum > 0 ? '✅' : '⏳';
+                    lines.push(`${idx + 1}. ${icon} *${item.r.block}* - ${item.r.name} (${item.paidMonths}/12 bln) : *${formatRupiahNbsp(item.yearSum)}*`);
+                });
+            }
+
+            lines.push(`--------------------------------`);
+            lines.push(`Portal Transparansi Warga: ${portalUrl}`);
+            return lines.join('\n');
+        }
+
+        function updateWaReportPreview() {
+            const mKey = document.getElementById('wa-report-month').value;
+            const statusFilter = document.getElementById('wa-report-status').value;
+
+            let message = '';
+            if (waReportFormat === 'yearly') {
+                message = buildWaYearlyMessage(statusFilter);
+            } else if (waReportFormat === 'table28') {
+                message = buildWaMonthlyTable28Message(mKey, statusFilter);
+            } else {
+                message = buildWaMonthlyListMessage(mKey, statusFilter);
+            }
+
+            document.getElementById('wa-share-textarea').value = message;
+            document.getElementById('wa-share-direct-link').href = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
+        }
+
+        function copyWaReportTextarea() {
+            const ta = document.getElementById('wa-share-textarea');
+            ta.select();
+            ta.setSelectionRange(0, 99999);
+            try {
+                document.execCommand('copy');
+                showToast('Teks laporan WhatsApp berhasil disalin!');
+            } catch (e) {
+                showToast('Gagal menyalin teks.');
+            }
+        }
+
+        function shareCashReportToWA() {
+            if (!isAdmin) return;
+            const s = state.settings;
+            const { totalMasuk, totalKeluar, saldo } = calculateCashTotals();
+            const recent = state.transactions.slice(0, 5).map(t =>
+                `• ${t.date} | ${t.desc}: ${t.type === 'income' ? '+' : '-'}${formatRupiahNbsp(t.amount)}`
+            ).join('\n');
+
+            const text =
+`*LAPORAN TRANSPARANSI KAS ${s.rtName.toUpperCase()}*
+${s.areaName}
+
+- *Saldo Akhir Kas : ${formatRupiahNbsp(saldo)}*
+- Total Pemasukan : ${formatRupiahNbsp(totalMasuk)}
+- Total Pengeluaran : ${formatRupiahNbsp(totalKeluar)}
+
+*5 Transaksi Terbaru:*
+${recent || 'Belum ada transaksi.'}
+
+Cek rincian lengkap di Portal Warga:
+${getCitizenPortalUrl()}`;
+
+            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
+        }
+
+        // =====================================================================
+        // 16. UNGGAH FOTO NOTA KAS & AKSI CRUD ADMIN
         // =====================================================================
         function handleReceiptFileSelect(e) {
             const file = e.target.files && e.target.files[0];
-            if (!file) {
-                clearPendingReceiptImage();
-                return;
-            }
+            if (!file) return;
+
             const reader = new FileReader();
             reader.onload = function(ev) {
                 const img = new Image();
                 img.onload = function() {
-                    const maxDim = 800;
+                    const maxDim = 760;
                     let w = img.width;
                     let h = img.height;
                     if (w > maxDim || h > maxDim) {
@@ -4102,11 +4497,12 @@
                     canvas.height = h;
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, w, h);
-                    pendingReceiptBase64 = canvas.toDataURL('image/jpeg', 0.62);
 
+                    pendingReceiptBase64 = canvas.toDataURL('image/jpeg', 0.65);
                     document.getElementById('adm-tx-receipt-preview').src = pendingReceiptBase64;
                     document.getElementById('adm-tx-receipt-preview-wrap').classList.remove('hidden');
                     document.getElementById('adm-tx-clear-receipt').classList.remove('hidden');
+                    showToast('Foto nota siap dilampirkan!');
                 };
                 img.src = ev.target.result;
             };
@@ -4125,27 +4521,34 @@
         async function addCashTransaction(e) {
             e.preventDefault();
             if (!isAdmin) return;
-            const txObj = {
+            const date = document.getElementById('adm-tx-date').value;
+            const type = document.getElementById('adm-tx-type').value;
+            const category = document.getElementById('adm-tx-cat').value;
+            const amount = Number(document.getElementById('adm-tx-amt').value || 0);
+            const desc = document.getElementById('adm-tx-desc').value.trim();
+
+            const newTx = {
                 id: 'tx_' + Date.now(),
-                date: document.getElementById('adm-tx-date').value,
-                type: document.getElementById('adm-tx-type').value,
-                category: document.getElementById('adm-tx-cat').value,
-                amount: Number(document.getElementById('adm-tx-amt').value),
-                desc: document.getElementById('adm-tx-desc').value.trim()
+                date,
+                type,
+                category,
+                amount,
+                desc
             };
             if (pendingReceiptBase64) {
-                txObj.receiptImage = pendingReceiptBase64;
+                newTx.receiptImage = pendingReceiptBase64;
             }
-            const updated = [txObj, ...state.transactions];
+
+            const updated = [newTx, ...state.transactions];
             document.getElementById('adm-tx-amt').value = '';
             document.getElementById('adm-tx-desc').value = '';
             clearPendingReceiptImage();
-            await saveNodeToFirebase('transactions', updated, true, 'Transaksi kas tersimpan!');
+            await saveNodeToFirebase('transactions', updated, true, 'Transaksi kas ditambahkan!');
         }
 
-        function deleteTransaction(id) {
+        function deleteCashTransaction(id) {
             if (!isAdmin) return;
-            openCustomConfirm('Hapus Transaksi Kas?', 'Saldo kas akan otomatis dihitung ulang.', async () => {
+            openCustomConfirm('Hapus Transaksi Kas?', 'Data transaksi ini akan dihapus secara permanen dari kas RT.', async () => {
                 const updated = state.transactions.filter(t => t.id !== id);
                 await saveNodeToFirebase('transactions', updated, true, 'Transaksi kas dihapus.');
             });
@@ -4154,39 +4557,46 @@
         async function addPollItem(e) {
             e.preventDefault();
             if (!isAdmin) return;
-            const q = document.getElementById('adm-poll-question').value.trim();
+            const question = document.getElementById('adm-poll-question').value.trim();
             const o1 = document.getElementById('adm-poll-opt1').value.trim();
             const o2 = document.getElementById('adm-poll-opt2').value.trim();
             const o3 = document.getElementById('adm-poll-opt3').value.trim();
-            if (!q || !o1 || !o2) return;
 
             const options = [
                 { id: 'opt_1', label: o1, votes: 0 },
                 { id: 'opt_2', label: o2, votes: 0 }
             ];
-            if (o3) options.push({ id: 'opt_3', label: o3, votes: 0 });
+            if (o3) {
+                options.push({ id: 'opt_3', label: o3, votes: 0 });
+            }
 
             const newPoll = {
                 id: 'poll_' + Date.now(),
-                question: q,
+                question,
                 active: true,
-                createdAt: new Date().toISOString().split('T')[0],
+                createdAt: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
                 options
             };
+
             const updated = [newPoll, ...state.polls];
-            e.target.reset();
+            document.getElementById('adm-poll-question').value = '';
+            document.getElementById('adm-poll-opt1').value = '';
+            document.getElementById('adm-poll-opt2').value = '';
+            document.getElementById('adm-poll-opt3').value = '';
             await saveNodeToFirebase('polls', updated, true, 'Polling warga dipublikasikan!');
         }
 
-        async function togglePollStatus(pollId) {
+        async function togglePollActive(pollId) {
             if (!isAdmin) return;
-            const updated = state.polls.map(p => (p.id === pollId ? { ...p, active: !p.active } : p));
+            const updated = state.polls.map(p =>
+                p.id === pollId ? { ...p, active: !p.active } : p
+            );
             await saveNodeToFirebase('polls', updated, true, 'Status polling diperbarui.');
         }
 
         function deletePollItem(pollId) {
             if (!isAdmin) return;
-            openCustomConfirm('Hapus Polling Warga?', 'Polling beserta hasil suaranya akan dihapus.', async () => {
+            openCustomConfirm('Hapus Polling Warga?', 'Polling dan hasil suaranya akan dihapus.', async () => {
                 const updated = state.polls.filter(p => p.id !== pollId);
                 await saveNodeToFirebase('polls', updated, true, 'Polling dihapus.');
             });
@@ -4195,23 +4605,21 @@
         async function addAnnouncementItem(e) {
             e.preventDefault();
             if (!isAdmin) return;
-            const updated = [
-                {
-                    id: 'ann_' + Date.now(),
-                    title: document.getElementById('adm-ann-title').value.trim(),
-                    category: document.getElementById('adm-ann-cat').value,
-                    date: document.getElementById('adm-ann-date').value.trim(),
-                    content: document.getElementById('adm-ann-content').value.trim()
-                },
-                ...state.announcements
-            ];
-            e.target.reset();
+            const title = document.getElementById('adm-ann-title').value.trim();
+            const category = document.getElementById('adm-ann-cat').value;
+            const date = document.getElementById('adm-ann-date').value.trim();
+            const content = document.getElementById('adm-ann-content').value.trim();
+
+            const updated = [{ id: 'ann_' + Date.now(), title, category, date, content }, ...state.announcements];
+            document.getElementById('adm-ann-title').value = '';
+            document.getElementById('adm-ann-date').value = '';
+            document.getElementById('adm-ann-content').value = '';
             await saveNodeToFirebase('announcements', updated, true, 'Pengumuman dipublikasikan!');
         }
 
-        function deleteAnnouncement(id) {
+        function deleteAnnouncementItem(id) {
             if (!isAdmin) return;
-            openCustomConfirm('Hapus Pengumuman?', 'Pengumuman ini akan dihapus dari Beranda.', async () => {
+            openCustomConfirm('Hapus Pengumuman?', 'Pengumuman ini akan dihapus dari halaman Beranda warga.', async () => {
                 const updated = state.announcements.filter(a => a.id !== id);
                 await saveNodeToFirebase('announcements', updated, true, 'Pengumuman dihapus.');
             });
@@ -4222,335 +4630,179 @@
             if (!isAdmin) return;
             const day = document.getElementById('adm-patrol-day').value.trim();
             const members = document.getElementById('adm-patrol-members').value.trim();
-            if (!day || !members) return;
             const updated = [...state.patrols, { id: 'pat_' + Date.now(), day, members }];
-            e.target.reset();
+            document.getElementById('adm-patrol-day').value = '';
+            document.getElementById('adm-patrol-members').value = '';
             await saveNodeToFirebase('patrols', updated, true, 'Jadwal ronda ditambahkan!');
         }
 
-        function deletePatrol(id) {
+        function deletePatrolItem(id) {
             if (!isAdmin) return;
-            openCustomConfirm('Hapus Jadwal Ronda?', 'Jadwal ronda ini akan dihapus dari daftar.', async () => {
+            openCustomConfirm('Hapus Jadwal Ronda?', 'Jadwal ronda ini akan dihapus dari Beranda warga.', async () => {
                 const updated = state.patrols.filter(r => r.id !== id);
                 await saveNodeToFirebase('patrols', updated, true, 'Jadwal ronda dihapus.');
             });
         }
 
         // =====================================================================
-        // 15. SHARE WHATSAPP (ADMIN ONLY — BERSIH TANPA ICON UANG)
+        // 17. LAYANAN SURAT & LAPORAN KE 3 PENGURUS INTI RT
         // =====================================================================
-        function shareCashReportToWA() {
-            if (!isAdmin) {
-                showToast('Fitur share laporan hanya untuk Pengurus RT.');
-                return;
-            }
-            const s = state.settings;
-            const { totalMasuk, totalKeluar, saldo } = calculateCashTotals();
-            const recent = state.transactions.slice(0, 6).map(t =>
-                `• ${t.date} | ${t.desc}: ${t.type === 'income' ? '+' : '-'} ${formatRupiahNbsp(t.amount)}`
-            ).join('\n');
-
-            const text = `*LAPORAN TRANSPARANSI KAS ${s.rtName.toUpperCase()}*\n` +
-                         `${s.areaName}\n` +
-                         `────────────────────\n` +
-                         `• Total Pemasukan : ${formatRupiahNbsp(totalMasuk)}\n` +
-                         `• Total Pengeluaran : ${formatRupiahNbsp(totalKeluar)}\n` +
-                         `*• Saldo Akhir Kas : ${formatRupiahNbsp(saldo)}*\n` +
-                         `────────────────────\n` +
-                         `*Transaksi Terakhir:*\n${recent || '- Belum ada transaksi -'}\n\n` +
-                         `Cek buku kas & status iuran warga secara live di:\n${getCitizenPortalUrl()}`;
-
-            window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
-        }
-
-        function setWaReportFormat(fmt) {
-            waReportFormat = fmt;
-            const formats = ['list', 'table28', 'yearly'];
-            formats.forEach(k => {
-                const btn = document.getElementById(`wa-fmt-${k}`);
-                if (!btn) return;
-                if (k === fmt) {
-                    btn.className = 'py-1.5 px-1.5 rounded-lg text-[10px] font-extrabold bg-white dark:bg-slate-700 text-emerald-800 dark:text-emerald-300 shadow-xs leading-tight text-center transition-all';
-                } else {
-                    btn.className = 'py-1.5 px-1.5 rounded-lg text-[10px] font-semibold text-slate-600 dark:text-slate-400 leading-tight text-center transition-all';
-                }
-            });
-
-            const monthWrap = document.getElementById('wa-month-picker-wrap');
-            const yearlyStyleWrap = document.getElementById('wa-yearly-style-wrap');
-            const hint = document.getElementById('wa-format-hint');
-
-            if (fmt === 'yearly') {
-                monthWrap.classList.add('hidden');
-                yearlyStyleWrap.classList.remove('hidden');
-                hint.textContent = 'Rekap 12 Bulan';
-            } else if (fmt === 'table28') {
-                monthWrap.classList.remove('hidden');
-                yearlyStyleWrap.classList.add('hidden');
-                hint.textContent = '28 Karakter Monospace';
-            } else {
-                monthWrap.classList.remove('hidden');
-                yearlyStyleWrap.classList.add('hidden');
-                hint.textContent = 'Nominal Utuh Anti-Pecah';
-            }
-
-            updateWaReportPreview();
-        }
-
-        function openWaIuranReportModal() {
-            if (!isAdmin) {
-                showToast('Fitur share laporan hanya untuk Pengurus RT.');
-                return;
-            }
-            const defaultMonth = activeTab === 'admin' ? adminMonthKey : citizenMonthKey;
-            document.getElementById('wa-report-month').value = defaultMonth;
-            document.getElementById('wa-report-status').value = 'all';
-            setWaReportFormat('list');
-            openModal('modal-wa-share');
-        }
-
-        function padRightFixed(str, len) {
-            const clean = String(str || '').replace(/\s+/g, ' ').trim();
-            if (clean.length >= len) return clean.slice(0, len);
-            return clean + ' '.repeat(len - clean.length);
-        }
-
-        function padLeftFixed(str, len) {
-            const clean = String(str || '').trim();
-            if (clean.length >= len) return clean.slice(0, len);
-            return ' '.repeat(len - clean.length) + clean;
-        }
-
-        function updateWaReportPreview() {
-            const s = state.settings;
-            const mKey = document.getElementById('wa-report-month').value;
-            const statusFilter = document.getElementById('wa-report-status').value;
-            const mDef = MONTH_DEFS.find(m => m.key === mKey) || MONTH_DEFS[10];
-            const stats = calculateMonthlyIuranStats(mKey);
-
-            const filtered = state.residents.filter(r => {
-                const nom = getCitizenMonthNominal(r, mKey);
-                if (statusFilter === 'paid') return nom > 0;
-                if (statusFilter === 'unpaid') return nom <= 0;
-                return true;
-            });
-
-            const filterLabel = statusFilter === 'paid' ? 'Sudah Setor (> Rp 0)' :
-                                statusFilter === 'unpaid' ? 'Belum Setor (Rp 0)' : 'Semua Warga';
-
-            let msg = '';
-
-            if (waReportFormat === 'table28') {
-                const lines = [
-                    'Blok  Nama Warga     Nominal',
-                    '----------------------------'
-                ];
-
-                if (!filtered.length) {
-                    lines.push('(Tidak ada data warga)');
-                } else {
-                    filtered.forEach(r => {
-                        const nom = getCitizenMonthNominal(r, mKey);
-                        const cBlok = padRightFixed(r.block, 5);
-                        const cNama = padRightFixed(r.name, 14);
-                        const nomCompact = nom > 0 ? formatCompactNominal(nom) : 'Rp 0';
-                        const cNom = padLeftFixed(nomCompact, 7);
-                        lines.push(`${cBlok} ${cNama} ${cNom}`);
-                    });
-                }
-
-                lines.push('----------------------------');
-                lines.push(padRightFixed('TOTAL TERKUMPUL:', 18) + padLeftFixed(formatCompactNominal(stats.collected), 10));
-
-                msg = `*LAPORAN IURAN ${s.rtName.toUpperCase()}*\n` +
-                      `Periode: *${mDef.full} ${s.year}*\n` +
-                      `Terkumpul: *${formatRupiahNbsp(stats.collected)}* (${stats.paidKK}/${stats.totalKK} KK)\n` +
-                      `Filter: ${filterLabel}\n\n` +
-                      '```\n' + lines.join('\n') + '\n```\n\n' +
-                      `Cek detail setoran warga di:\n${getCitizenPortalUrl()}`;
-
-            } else if (waReportFormat === 'yearly') {
-                const yearlyStyle = document.getElementById('wa-yearly-style').value;
-                const listForYear = state.residents.filter(r => {
-                    const yr = getCitizenYearlyNominal(r);
-                    if (statusFilter === 'paid') return yr > 0;
-                    if (statusFilter === 'unpaid') return yr <= 0;
-                    return true;
-                });
-
-                const grandYear = listForYear.reduce((acc, r) => acc + getCitizenYearlyNominal(r), 0);
-
-                if (yearlyStyle === 'table27') {
-                    const lines = [
-                        'Blok  Nama Warga   Setahun',
-                        '---------------------------'
-                    ];
-                    listForYear.forEach(r => {
-                        const yr = getCitizenYearlyNominal(r);
-                        const cBlok = padRightFixed(r.block, 5);
-                        const cNama = padRightFixed(r.name, 12);
-                        const cYr = padLeftFixed(yr > 0 ? formatCompactNominal(yr) : 'Rp 0', 8);
-                        lines.push(`${cBlok} ${cNama} ${cYr}`);
-                    });
-                    lines.push('---------------------------');
-                    lines.push(padRightFixed('TOTAL SETAHUN:', 17) + padLeftFixed(formatCompactNominal(grandYear), 10));
-
-                    msg = `*REKAP IURAN SETAHUN ${s.rtName.toUpperCase()}*\n` +
-                          `Tahun: *${s.year}* (${listForYear.length} KK)\n` +
-                          `Total Akumulasi: *${formatRupiahNbsp(grandYear)}*\n\n` +
-                          '```\n' + lines.join('\n') + '\n```\n\n' +
-                          `Cek rincian per bulan di:\n${getCitizenPortalUrl()}`;
-                } else {
-                    const rows = listForYear.map((r, i) => {
-                        const yr = getCitizenYearlyNominal(r);
-                        const activeM = MONTH_DEFS.filter(d => getCitizenMonthNominal(r, d.key) > 0).length;
-                        return `${i + 1}. *${r.block}* - ${r.name}\n   Total ${s.year}: *${formatRupiahNbsp(yr)}* (${activeM}/12 bln)`;
-                    }).join('\n');
-
-                    msg = `*REKAP IURAN SETAHUN ${s.rtName.toUpperCase()}*\n` +
-                          `Tahun: *${s.year}* • Total: *${formatRupiahNbsp(grandYear)}*\n` +
-                          `────────────────────\n` +
-                          `${rows || '- Tidak ada data warga -'}\n` +
-                          `────────────────────\n` +
-                          `Cek rincian Jan-Des di:\n${getCitizenPortalUrl()}`;
-                }
-
-            } else {
-                const rows = filtered.map((r, i) => {
-                    const nom = getCitizenMonthNominal(r, mKey);
-                    const statusMark = nom > 0 ? '✅' : '⏳';
-                    return `${i + 1}. ${statusMark} *${r.block}* - ${r.name} : *${formatRupiahNbsp(nom)}*`;
-                }).join('\n');
-
-                msg = `*LAPORAN IURAN ${s.rtName.toUpperCase()}*\n` +
-                      `${s.areaName}\n` +
-                      `Periode: *${mDef.full} ${s.year}*\n` +
-                      `────────────────────\n` +
-                      `• Terkumpul : *${formatRupiahNbsp(stats.collected)}*\n` +
-                      `• Sudah Setor : *${stats.paidKK} KK* | Belum: *${stats.unpaidKK} KK*\n` +
-                      `• Filter : ${filterLabel}\n` +
-                      `────────────────────\n` +
-                      `${rows || '- Tidak ada data warga -'}\n` +
-                      `────────────────────\n` +
-                      `Cek riwayat & kuitansi digital di:\n${getCitizenPortalUrl()}`;
-            }
-
-            document.getElementById('wa-share-textarea').value = msg;
-            document.getElementById('wa-share-direct-link').href = `https://wa.me/?text=${encodeURIComponent(msg)}`;
-        }
-
-        function copyWaReportTextarea() {
-            const ta = document.getElementById('wa-share-textarea');
-            ta.select();
-            ta.setSelectionRange(0, 99999);
-            try {
-                document.execCommand('copy');
-                showToast('Laporan WhatsApp disalin ke clipboard!');
-            } catch (e) {
-                showToast('Gagal menyalin teks.');
-            }
-        }
-
-        // =====================================================================
-        // 16. LAYANAN WARGA (KIRIM KE PENGURUS TERPILIH + PRATINJAU SURAT)
-        // =====================================================================
-        function resolveSelectedOfficer(roleKey) {
+        function getSelectedOfficerWaTarget(roleKey) {
             const s = state.settings;
             if (roleKey === 'sekretaris') {
-                return { role: 'Sekretaris RT', name: s.namaSekretaris || 'Sekretaris RT', phone: normalizeWaNumber(s.waSekretaris) };
+                return {
+                    role: 'Sekretaris RT',
+                    name: s.namaSekretaris || 'Sekretaris RT 04',
+                    phone: normalizeWaNumber(s.waSekretaris)
+                };
             }
             if (roleKey === 'bendahara') {
-                return { role: 'Bendahara RT', name: s.treasurer || 'Bendahara RT', phone: normalizeWaNumber(s.waBendahara) };
+                return {
+                    role: 'Bendahara RT',
+                    name: s.treasurer || 'Bendahara RT 04',
+                    phone: normalizeWaNumber(s.waBendahara)
+                };
             }
-            return { role: 'Ketua RT', name: s.chairman || 'Ketua RT', phone: normalizeWaNumber(s.waKetua) };
+            return {
+                role: 'Ketua RT',
+                name: s.chairman || 'Ketua RT 04',
+                phone: normalizeWaNumber(s.waKetua)
+            };
         }
 
         function sendLetterRequestWA(e) {
             e.preventDefault();
             const s = state.settings;
-            const officer = resolveSelectedOfficer(document.getElementById('let-recipient').value);
-            if (!officer.phone) {
-                showToast(`Nomor WhatsApp ${officer.role} belum diatur oleh pengurus.`);
-                return;
-            }
+            const roleKey = document.getElementById('let-recipient').value || 'ketua';
+            const officer = getSelectedOfficerWaTarget(roleKey);
             const jenis = document.getElementById('let-jenis').value;
             const nama = document.getElementById('let-nama').value.trim();
             const blok = document.getElementById('let-blok').value.trim();
             const keperluan = document.getElementById('let-keperluan').value.trim();
 
-            const msg = `Assalamu'alaikum / Halo *${officer.name}* (${officer.role} ${s.rtName}),\n\n` +
-                        `Saya warga bermaksud mengajukan permohonan surat pengantar:\n` +
-                        `• *Jenis Surat:* ${jenis}\n` +
-                        `• *Nama Lengkap:* ${nama}\n` +
-                        `• *Blok / Rumah:* ${blok}\n` +
-                        `• *Keperluan:* ${keperluan}\n\n` +
-                        `Terima kasih atas bantuannya.`;
-            window.open(`https://wa.me/${officer.phone}?text=${encodeURIComponent(msg)}`, '_blank', 'noopener,noreferrer');
+            const text =
+`Assalamu'alaikum / Selamat pagi *${officer.name}* (${officer.role} ${s.rtName}),
+Saya warga ${s.areaName} mengajukan permohonan surat pengantar:
+
+• *Jenis Surat:* ${jenis}
+• *Nama Lengkap:* ${nama}
+• *Blok / Rumah:* ${blok}
+• *Keperluan:* ${keperluan}
+
+Mohon bantuannya untuk pembuatan surat tersebut. Terima kasih.`;
+
+            const encoded = encodeURIComponent(text);
+            const waUrl = officer.phone
+                ? `https://wa.me/${officer.phone}?text=${encoded}`
+                : `https://api.whatsapp.com/send?text=${encoded}`;
+
+            if (!officer.phone) {
+                showToast(`Nomor WA ${officer.role} belum diatur, membuka pilih kontak WA...`);
+            }
+            window.open(waUrl, '_blank', 'noopener');
         }
 
         function openLetterDraftPreview() {
             const s = state.settings;
             const jenis = document.getElementById('let-jenis').value;
-            const nama = document.getElementById('let-nama').value.trim() || '........................................';
-            const blok = document.getElementById('let-blok').value.trim() || '........';
-            const keperluan = document.getElementById('let-keperluan').value.trim() || 'Keperluan administrasi kependudukan';
-            const today = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
-            const rtCode = s.rtName.split('/')[0].replace(/\s+/g, '');
+            const nama = document.getElementById('let-nama').value.trim() || '[Nama Warga]';
+            const blok = document.getElementById('let-blok').value.trim() || '[Blok/No]';
+            const keperluan = document.getElementById('let-keperluan').value.trim() || '[Keperluan Pengajuan Surat]';
+            const now = new Date();
+            const tglStr = now.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+            const rtShort = s.rtName.split('/')[0].replace(/\s+/g, '');
 
             document.getElementById('doc-rt-name').textContent = s.rtName;
             document.getElementById('doc-area-name').textContent = s.areaName;
+            document.getElementById('doc-jenis').textContent = jenis;
+            document.getElementById('doc-nomor').textContent = `028/SP-${rtShort}/XI/${s.year}`;
             document.querySelectorAll('.doc-rt-inline').forEach(el => el.textContent = s.rtName);
             document.querySelectorAll('.doc-area-inline').forEach(el => el.textContent = s.areaName);
-            document.getElementById('doc-jenis').textContent = jenis.toUpperCase();
-            document.getElementById('doc-nomor').textContent = `028/SP-${rtCode}/XI/${s.year}`;
             document.getElementById('doc-nama').textContent = nama;
             document.getElementById('doc-blok').textContent = blok;
             document.getElementById('doc-keperluan').textContent = keperluan;
-            document.getElementById('doc-tanggal').textContent = today;
+            document.getElementById('doc-tanggal').textContent = tglStr;
             document.getElementById('doc-ketua').textContent = s.chairman;
-
             openModal('modal-letter-preview');
         }
 
         function sendReportRequestWA(e) {
             e.preventDefault();
             const s = state.settings;
-            const officer = resolveSelectedOfficer(document.getElementById('rep-recipient').value);
-            if (!officer.phone) {
-                showToast(`Nomor WhatsApp ${officer.role} belum diatur oleh pengurus.`);
-                return;
-            }
+            const roleKey = document.getElementById('rep-recipient').value || 'ketua';
+            const officer = getSelectedOfficerWaTarget(roleKey);
             const nama = document.getElementById('rep-nama').value.trim();
-            const kat = document.getElementById('rep-kategori').value;
+            const kategori = document.getElementById('rep-kategori').value;
             const detail = document.getElementById('rep-detail').value.trim();
 
-            const msg = `Halo *${officer.name}* (${officer.role} ${s.rtName}),\n\n` +
-                        `Saya menyampaikan laporan warga:\n` +
-                        `• *Pelapor:* ${nama}\n` +
-                        `• *Kategori:* ${kat}\n` +
-                        `• *Detail / Lokasi:* ${detail}\n\n` +
-                        `Mohon tindak lanjutnya. Terima kasih.`;
-            window.open(`https://wa.me/${officer.phone}?text=${encodeURIComponent(msg)}`, '_blank', 'noopener,noreferrer');
+            const text =
+`Assalamu'alaikum / Halo *${officer.name}* (${officer.role} ${s.rtName}),
+Saya ingin menyampaikan laporan lingkungan:
+
+• *Pelapor:* ${nama}
+• *Kategori:* ${kategori}
+• *Detail Laporan:* ${detail}
+
+Terima kasih atas perhatiannya.`;
+
+            const encoded = encodeURIComponent(text);
+            const waUrl = officer.phone
+                ? `https://wa.me/${officer.phone}?text=${encoded}`
+                : `https://api.whatsapp.com/send?text=${encoded}`;
+
+            if (!officer.phone) {
+                showToast(`Nomor WA ${officer.role} belum diatur, membuka pilih kontak WA...`);
+            }
+            window.open(waUrl, '_blank', 'noopener');
         }
 
         // =====================================================================
-        // 17. PWA INSTALL, UTILITAS GITHUB, MODAL & TOAST
+        // 18. UTILITAS MODAL, TOAST, PWA INSTALL & EXPORT HTML
         // =====================================================================
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredInstallPrompt = e;
-        });
+        function openModal(id) {
+            document.getElementById(id).classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        function openCustomConfirm(title, desc, onConfirm) {
+            document.getElementById('confirm-title').textContent = title;
+            document.getElementById('confirm-desc').textContent = desc;
+            const yesBtn = document.getElementById('confirm-yes-btn');
+            yesBtn.onclick = () => {
+                closeModal('modal-confirm');
+                if (typeof onConfirm === 'function') onConfirm();
+            };
+            openModal('modal-confirm');
+        }
+
+        let toastTimer = null;
+        function showToast(msg) {
+            const box = document.getElementById('toast-box');
+            document.getElementById('toast-msg').textContent = msg;
+            box.classList.remove('hidden');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => box.classList.add('hidden'), 2800);
+        }
 
         function initInstallBanner() {
             const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-            const closed = localStorage.getItem(BANNER_CLOSED_KEY) === 'true';
-            if (isStandalone || closed) {
+            const isClosed = sessionStorage.getItem(BANNER_CLOSED_KEY) === 'true';
+            if (isStandalone || isClosed) {
                 document.getElementById('pwa-install-banner').classList.add('hidden');
             }
+
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredInstallPrompt = e;
+            });
         }
 
         function dismissInstallBanner() {
-            localStorage.setItem(BANNER_CLOSED_KEY, 'true');
+            sessionStorage.setItem(BANNER_CLOSED_KEY, 'true');
             document.getElementById('pwa-install-banner').classList.add('hidden');
         }
 
@@ -4565,27 +4817,33 @@
             }
         }
 
+        function getCleanDocumentHtml() {
+            return '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+        }
+
         function copyAllHtmlCode() {
-            const fullHtml = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+            if (!isAdmin) return;
+            const htmlStr = getCleanDocumentHtml();
             const ta = document.createElement('textarea');
-            ta.value = fullHtml;
+            ta.value = htmlStr;
             ta.style.position = 'fixed';
             ta.style.opacity = '0';
             document.body.appendChild(ta);
             ta.select();
-            ta.setSelectionRange(0, fullHtml.length);
+            ta.setSelectionRange(0, htmlStr.length);
             try {
                 document.execCommand('copy');
-                showToast('Seluruh kode HTML disalin! Siap paste ke GitHub.');
+                showToast('Kode index.html disalin ke clipboard!');
             } catch (e) {
-                showToast('Gagal menyalin kode HTML.');
+                showToast('Gagal menyalin kode.');
             }
             document.body.removeChild(ta);
         }
 
         function downloadIndexHtmlFile() {
-            const fullHtml = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
-            const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
+            if (!isAdmin) return;
+            const htmlStr = getCleanDocumentHtml();
+            const blob = new Blob([htmlStr], { type: 'text/html;charset=utf-8' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
@@ -4597,45 +4855,17 @@
             showToast('File index.html berhasil diunduh!');
         }
 
-        function openModal(id) {
-            document.getElementById(id).classList.remove('hidden');
-            lucide.createIcons();
-        }
-
-        function closeModal(id) {
-            document.getElementById(id).classList.add('hidden');
-        }
-
-        function openCustomConfirm(title, desc, onYes) {
-            document.getElementById('confirm-title').textContent = title;
-            document.getElementById('confirm-desc').textContent = desc;
-            document.getElementById('confirm-yes-btn').onclick = () => {
-                closeModal('modal-confirm');
-                onYes();
-            };
-            openModal('modal-confirm');
-        }
-
-        let toastTimer = null;
-        function showToast(msg) {
-            const box = document.getElementById('toast-box');
-            document.getElementById('toast-msg').textContent = msg;
-            box.classList.remove('hidden');
-            clearTimeout(toastTimer);
-            toastTimer = setTimeout(() => box.classList.add('hidden'), 2800);
-        }
-
         // =====================================================================
-        // 18. BOOTSTRAP APLIKASI SAAT HALAMAN DIMUAT
+        // 19. BOOTSTRAP APLIKASI SAAT HALAMAN DIBUKA
         // =====================================================================
-        window.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', () => {
             initDarkMode();
             setupDynamicPwaAssets();
             initInstallBanner();
 
             const todayIso = new Date().toISOString().split('T')[0];
-            const dateInput = document.getElementById('adm-tx-date');
-            if (dateInput) dateInput.value = todayIso;
+            const txDateEl = document.getElementById('adm-tx-date');
+            if (txDateEl) txDateEl.value = todayIso;
 
             initAccessRole();
             initFirebaseRealtimeSync();
